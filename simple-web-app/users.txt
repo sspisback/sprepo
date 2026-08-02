@@ -1,3 +1,6 @@
 # username:password, one pair per line
 admin:admin123
 alice:wonderland
+harry:potter
+james:cameron
+issac:newton

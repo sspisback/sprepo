@@ -15,7 +15,17 @@ python3 -m venv venv && ./venv/bin/pip install -r requirements.txt
 ./venv/bin/python app.py      # http://127.0.0.1:5000
 ```
 
-Demo logins are in `users.txt` (`admin` / `admin123`, `alice` / `wonderland`).
+Demo logins are in `users.txt`, each with its own student record in
+`students.json`:
+
+| Username | Password | Student | Year | Attendance |
+|---|---|---|---|---|
+| `alice` | `wonderland` | Alice Nakamura | 9 | 97.4% — above target |
+| `admin` | `admin123` | Sam Okafor | 10 | 88.9% — persistent absence |
+| `harry` | `potter` | Harry Potter | 7 | 92.6% — below target |
+| `james` | `cameron` | James Cameron | 11 | 99.5% — above target |
+| `issac` | `newton` | Isaac Newton | 8 | 96.8% — above target |
+
 Passwords are stored in plaintext — it is a demo, not a pattern to copy.
 
 ## [`pm-job-agent-2/`](pm-job-agent-2/) — SerpApi job agent

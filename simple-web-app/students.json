@@ -78,5 +78,125 @@
         "action": "Fortnightly algebra intervention group, plus set 2 homework revisited with worked examples."
       }
     ]
+  },
+  "harry": {
+    "first_name": "Harry",
+    "surname": "Potter",
+    "year_group": "Year 7",
+    "form_class": "7C",
+    "class_teacher": "Mrs A. Bhandari",
+    "term": "Summer Term 2026",
+    "attendance": {
+      "school_days": 190,
+      "authorised_days": 11,
+      "unauthorised_days": 3,
+      "target_pct": 95
+    },
+    "grades": [
+      { "subject": "Mathematics",        "grade": 5, "target": 5, "effort": "Good" },
+      { "subject": "English",            "grade": 6, "target": 5, "effort": "Excellent" },
+      { "subject": "Science",            "grade": 4, "target": 5, "effort": "Needs attention" },
+      { "subject": "History",            "grade": 7, "target": 5, "effort": "Excellent" },
+      { "subject": "Geography",          "grade": 5, "target": 5, "effort": "Good" },
+      { "subject": "French",             "grade": 3, "target": 5, "effort": "Needs attention" },
+      { "subject": "Physical Education", "grade": 7, "target": 6, "effort": "Excellent" }
+    ],
+    "improvements": [
+      {
+        "subject": "Attendance",
+        "note": "At 92.6% attendance sits below the 95% target. Eleven days were authorised illness, but the three unauthorised days this term are what pulled the figure under.",
+        "action": "Call the school office before 9:00am on any absence so it can be authorised properly."
+      },
+      {
+        "subject": "French",
+        "note": "The weakest subject by two grades. Harry participates confidently aloud, but written accuracy — genders, accents, verb endings — is inconsistent.",
+        "action": "Ten minutes on the vocabulary app daily; retest at the end of week 5."
+      },
+      {
+        "subject": "Science",
+        "note": "Practical work is strong and conclusions are thin, so marks are being lost on written explanation rather than understanding.",
+        "action": "Practise conclusions using the claim-evidence-reasoning structure covered in class."
+      }
+    ]
+  },
+  "james": {
+    "first_name": "James",
+    "surname": "Cameron",
+    "year_group": "Year 11",
+    "form_class": "11A",
+    "class_teacher": "Dr H. Lindqvist",
+    "term": "Summer Term 2026",
+    "attendance": {
+      "school_days": 190,
+      "authorised_days": 1,
+      "unauthorised_days": 0,
+      "target_pct": 95
+    },
+    "grades": [
+      { "subject": "Mathematics",        "grade": 8, "target": 7, "effort": "Excellent" },
+      { "subject": "English Language",   "grade": 7, "target": 7, "effort": "Good" },
+      { "subject": "English Literature", "grade": 8, "target": 7, "effort": "Excellent" },
+      { "subject": "Physics",            "grade": 9, "target": 8, "effort": "Excellent" },
+      { "subject": "Chemistry",          "grade": 7, "target": 7, "effort": "Good" },
+      { "subject": "Media Studies",      "grade": 9, "target": 8, "effort": "Excellent" },
+      { "subject": "Film Studies",       "grade": 9, "target": 8, "effort": "Excellent" }
+    ],
+    "improvements": [
+      {
+        "subject": "Chemistry",
+        "note": "The only subject sitting flat against target while everything else exceeds it. Organic mechanisms are the specific weak point in recent papers.",
+        "action": "Join the Thursday revision clinic for the final four weeks before the exam series."
+      },
+      {
+        "subject": "Workload balance",
+        "note": "Coursework for Media and Film is outstanding, and both fall due in the same fortnight as the science practicals.",
+        "action": "Agree a submission timetable with Dr Lindqvist in week 2 to avoid a pile-up."
+      },
+      {
+        "subject": "Post-16 planning",
+        "note": "Current grades put A-level Film Production and Physics well within reach, and the application window closes at the end of this term.",
+        "action": "Book a careers appointment before half term to confirm sixth-form choices."
+      }
+    ]
+  },
+  "issac": {
+    "first_name": "Isaac",
+    "surname": "Newton",
+    "year_group": "Year 8",
+    "form_class": "8D",
+    "class_teacher": "Mr T. Adeyemi",
+    "term": "Summer Term 2026",
+    "attendance": {
+      "school_days": 190,
+      "authorised_days": 5,
+      "unauthorised_days": 1,
+      "target_pct": 95
+    },
+    "grades": [
+      { "subject": "Mathematics",       "grade": 9, "target": 7, "effort": "Excellent" },
+      { "subject": "English",           "grade": 4, "target": 6, "effort": "Needs attention" },
+      { "subject": "Science",           "grade": 9, "target": 7, "effort": "Excellent" },
+      { "subject": "History",           "grade": 5, "target": 6, "effort": "Good" },
+      { "subject": "Geography",         "grade": 6, "target": 6, "effort": "Good" },
+      { "subject": "Spanish",           "grade": 4, "target": 6, "effort": "Needs attention" },
+      { "subject": "Design Technology", "grade": 8, "target": 7, "effort": "Excellent" }
+    ],
+    "improvements": [
+      {
+        "subject": "English",
+        "note": "A striking split — two grades above target in Maths and Science, two below in English and Spanish. Analytical reading is fine; extended writing under time pressure is what costs the marks.",
+        "action": "Weekly timed paragraph practice with Mr Adeyemi, structure before content."
+      },
+      {
+        "subject": "Spanish",
+        "note": "The same underlying issue as English. Recall in class is good, but written accuracy drops sharply in assessment conditions.",
+        "action": "Sit the vocabulary retest in week 4; attend Tuesday lunchtime support until then."
+      },
+      {
+        "subject": "Stretch in Science",
+        "note": "Working two grades above target and finishing set tasks well ahead of the class. There is scope for harder material rather than more of the same.",
+        "action": "Invited to the Year 9 STEM enrichment group and the regional science olympiad in October."
+      }
+    ]
   }
 }
