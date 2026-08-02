@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -m pip --version)",
+      "Bash(./venv/bin/python *)",
+      "Bash(command -v convert magick)",
+      "Bash(./venv/bin/pip install *)"
+    ]
+  }
+}

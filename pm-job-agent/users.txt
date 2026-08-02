@@ -1,0 +1,3 @@
+# username:password, one pair per line
+admin:admin123
+alice:wonderland

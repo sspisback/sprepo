@@ -1,0 +1,82 @@
+{
+  "alice": {
+    "first_name": "Alice",
+    "surname": "Nakamura",
+    "year_group": "Year 9",
+    "form_class": "9B",
+    "class_teacher": "Mr D. Okonkwo",
+    "term": "Summer Term 2026",
+    "attendance": {
+      "school_days": 190,
+      "authorised_days": 4,
+      "unauthorised_days": 1,
+      "target_pct": 95
+    },
+    "grades": [
+      { "subject": "Mathematics",       "grade": 7, "target": 6, "effort": "Excellent" },
+      { "subject": "English Literature", "grade": 6, "target": 6, "effort": "Good" },
+      { "subject": "Combined Science",  "grade": 7, "target": 7, "effort": "Good" },
+      { "subject": "History",           "grade": 5, "target": 6, "effort": "Needs attention" },
+      { "subject": "Geography",         "grade": 6, "target": 5, "effort": "Good" },
+      { "subject": "French",            "grade": 4, "target": 6, "effort": "Needs attention" },
+      { "subject": "Art & Design",      "grade": 8, "target": 7, "effort": "Excellent" }
+    ],
+    "improvements": [
+      {
+        "subject": "French",
+        "note": "Vocabulary recall is holding back written work. Speaking assessments are stronger than the written papers, so the grade under-represents what Alice can do verbally.",
+        "action": "Ten minutes of vocabulary practice four evenings a week, and join Thursday lunchtime conversation club."
+      },
+      {
+        "subject": "History",
+        "note": "Source analysis is secure, but essays run out of time before the conclusion. Two of the last three papers were unfinished.",
+        "action": "Practise timed 20-minute essay plans; bring one to Mr Okonkwo each fortnight for feedback."
+      },
+      {
+        "subject": "Attendance",
+        "note": "One unauthorised day this term. Attendance is still above the 95% target, but a second unauthorised absence would bring it close to the threshold.",
+        "action": "Report any absence to the school office before 9:00am so it can be authorised."
+      }
+    ]
+  },
+  "admin": {
+    "first_name": "Sam",
+    "surname": "Okafor",
+    "year_group": "Year 10",
+    "form_class": "10A",
+    "class_teacher": "Ms R. Whitfield",
+    "term": "Summer Term 2026",
+    "attendance": {
+      "school_days": 190,
+      "authorised_days": 12,
+      "unauthorised_days": 9,
+      "target_pct": 95
+    },
+    "grades": [
+      { "subject": "Mathematics",       "grade": 4, "target": 6, "effort": "Needs attention" },
+      { "subject": "English Language",  "grade": 5, "target": 5, "effort": "Good" },
+      { "subject": "Biology",           "grade": 5, "target": 6, "effort": "Good" },
+      { "subject": "Chemistry",         "grade": 3, "target": 5, "effort": "Needs attention" },
+      { "subject": "Computer Science",  "grade": 7, "target": 6, "effort": "Excellent" },
+      { "subject": "Design Technology", "grade": 6, "target": 6, "effort": "Good" },
+      { "subject": "Physical Education", "grade": 6, "target": 5, "effort": "Excellent" }
+    ],
+    "improvements": [
+      {
+        "subject": "Attendance",
+        "note": "Attendance of 88.9% falls into the persistent-absence band (below 90%). Nine days are unauthorised, and the missed lessons line up with the drop in Maths and Chemistry.",
+        "action": "Meeting with Ms Whitfield and the attendance lead in week 3 to agree a support plan."
+      },
+      {
+        "subject": "Chemistry",
+        "note": "Two topics were missed entirely during absence (rates of reaction, electrolysis), so the grade reflects gaps rather than ability.",
+        "action": "Catch-up sessions Tuesday after school; both topics reassessed at the end of term."
+      },
+      {
+        "subject": "Mathematics",
+        "note": "Algebraic manipulation is the specific gap. Number and statistics work is on target, which is why the overall grade looks lower than classwork suggests.",
+        "action": "Fortnightly algebra intervention group, plus set 2 homework revisited with worked examples."
+      }
+    ]
+  }
+}

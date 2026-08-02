@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard{% if profile %} — {{ profile.full_name }}{% endif %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <div class="school">Northgate Academy</div>
+        {% if profile %}<div class="term">{{ profile.term }}</div>{% endif %}
+      </div>
+      <nav>
+        <span class="greeting">Welcome, {{ profile.first_name if profile else username }}</span>
+        <a href="{{ url_for('logout') }}">Log out</a>
+      </nav>
+    </header>
+
+    <main>
+      {% if not profile %}
+      <section class="card">
+        <h2>Student record</h2>
+        <p class="empty">
+          No student record is linked to the account <strong>{{ username }}</strong>.
+          Add an entry keyed by that username in <code>students.json</code>.
+        </p>
+      </section>
+      {% else %}
+
+      <section class="card">
+        <h2>Student</h2>
+        <p class="student-name">{{ profile.full_name }}</p>
+        <dl class="facts">
+          <div>
+            <dt>Year group</dt>
+            <dd>{{ profile.year_group }}</dd>
+          </div>
+          <div>
+            <dt>Class</dt>
+            <dd>{{ profile.form_class }}</dd>
+          </div>
+          <div>
+            <dt>Class teacher</dt>
+            <dd>{{ profile.class_teacher }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      {% set a = profile.attendance %}
+      <section class="card">
+        <h2>Attendance</h2>
+
+        <div class="hero-row">
+          <span class="hero">{{ a.pct }}%</span>
+          <span class="hero-label">of {{ a.school_days }} school days attended</span>
+          <span class="pill pill--{{ a.band }}">
+            <span class="dot" aria-hidden="true"></span>{{ a.band_label }}
+          </span>
+        </div>
+
+        <div class="meter">
+          <div class="meter__track" aria-hidden="true">
+            <div class="meter__fill" style="width: {{ a.pct }}%"></div>
+            <div class="meter__notch" style="left: {{ a.target_pct }}%"></div>
+          </div>
+          <p class="meter__caption">
+            Target {{ a.target_pct }}% — currently
+            {% if a.gap_to_target >= 0 %}
+            {{ a.gap_to_target }} points above target.
+            {% else %}
+            {{ a.gap_to_target | abs | round(1) }} points below target.
+            {% endif %}
+          </p>
+        </div>
+
+        <div class="kpi-row">
+          <div class="tile">
+            <div class="tile__label">Authorised absence</div>
+            <div class="tile__value">
+              {{ a.authorised_days }}<span class="tile__unit">days</span>
+            </div>
+            <div class="tile__note">Illness, appointments, approved leave</div>
+          </div>
+          <div class="tile">
+            <div class="tile__label">Unauthorised absence</div>
+            <div class="tile__value">
+              {{ a.unauthorised_days }}<span class="tile__unit">days</span>
+            </div>
+            {% if a.unauthorised_days > 0 %}
+            <div class="tile__note tile__note--flag">Needs explanation</div>
+            {% else %}
+            <div class="tile__note">None recorded</div>
+            {% endif %}
+          </div>
+          <div class="tile">
+            <div class="tile__label">Total absence</div>
+            <div class="tile__value">
+              {{ a.total_absence_days }}<span class="tile__unit">days</span>
+            </div>
+            <div class="tile__note">{{ a.present_days }} days present</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Current study grading</h2>
+        <div class="table-wrap">
+          <table class="grades">
+            <thead>
+              <tr>
+                <th scope="col">Subject</th>
+                <th scope="col" class="num">Grade</th>
+                <th scope="col" class="num">Target</th>
+                <th scope="col">Against target</th>
+                <th scope="col">Effort</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for g in profile.grades %}
+              <tr>
+                <th scope="row">{{ g.subject }}</th>
+                <td class="num">{{ g.grade }}</td>
+                <td class="num">{{ g.target }}</td>
+                <td class="delta delta--{{ g.state }}">
+                  <span class="glyph" aria-hidden="true">{{ g.glyph }}</span
+                  >{% if g.delta != 0 %}{{ "%+d"|format(g.delta) }} {% endif %}<span
+                    class="word"
+                    >{{ g.state_label }}</span
+                  >
+                </td>
+                <td>{{ g.effort }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <p class="grade-summary">
+          {{ profile.grade_counts.above }} above target ·
+          {{ profile.grade_counts.on }} on target ·
+          {{ profile.grade_counts.below }} below target.
+          Grades are on the 9–1 scale, where 9 is highest.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Room for improvement</h2>
+        <ul class="improve">
+          {% for item in profile.improvements %}
+          <li>
+            <h3>{{ item.subject }}</h3>
+            <p>{{ item.note }}</p>
+            <p class="action"><strong>Next step:</strong> {{ item.action }}</p>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      {% endif %}
+    </main>
+  </body>
+</html>

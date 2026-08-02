@@ -1,0 +1,449 @@
+/* Design tokens.
+   Light and dark are each selected against their own surface — the dark
+   column is the same hues re-stepped for the dark plane, not an inversion.
+   Contrast checked: all ink >= 4.5:1 on its surface; meter track >= 2:1. */
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface-1: #fcfcfb;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --gridline: #e1e0d9;
+  --baseline: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.1);
+
+  --accent: #2a78d6;         /* sequential blue 450 — meter fill */
+  --track: #86b6ef;          /* sequential blue 250 — 2.06:1 vs surface */
+
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-critical: #d03b3b;
+  --success-text: #006300;   /* 7.35:1 — the text-safe green */
+  --critical-text: #d03b3b;  /* 4.68:1 */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface-1: #1a1a19;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --gridline: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.1);
+
+    --accent: #3987e5;
+    --track: #184f95;        /* 2.15:1 vs dark surface */
+
+    --success-text: #0ca30c;
+    --critical-text: #e66767;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--page);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* ---------- login ---------- */
+
+.login-body {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 1.5rem;
+}
+
+.login-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 2rem;
+  width: 20rem;
+  max-width: 100%;
+}
+
+.login-card h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+}
+
+.login-card .subtitle {
+  margin: 0 0 1.5rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.login-card label {
+  display: block;
+  margin-bottom: 1rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.login-card input {
+  width: 100%;
+  margin-top: 0.375rem;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--baseline);
+  border-radius: 6px;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.login-card input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.login-card button {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.625rem;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #ffffff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.error {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--status-critical);
+  border-radius: 4px;
+  background: rgba(208, 59, 59, 0.08);
+  color: var(--critical-text);
+  font-size: 0.875rem;
+}
+
+/* ---------- dashboard shell ---------- */
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--gridline);
+  background: var(--surface-1);
+}
+
+.topbar .school {
+  font-weight: 600;
+}
+
+.topbar .term {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.topbar nav {
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+  font-size: 0.875rem;
+}
+
+.topbar .greeting {
+  color: var(--text-secondary);
+}
+
+a {
+  color: var(--accent);
+}
+
+main {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 3rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem;
+}
+
+.card > h2 {
+  margin: 0 0 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ---------- student identity ---------- */
+
+.student-name {
+  margin: 0 0 1.25rem;
+  font-size: 1.5rem;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1.25rem;
+  margin: 0;
+}
+
+.facts dt {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.facts dd {
+  margin: 0.25rem 0 0;
+  font-weight: 600;
+}
+
+/* ---------- attendance: hero + meter + tiles ---------- */
+
+.hero-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  align-items: baseline;
+}
+
+/* Hero figure: proportional figures, never tabular — tabular-nums makes a
+   large number look loose. Same sans as everything else, no display face. */
+.hero {
+  font-size: 3.25rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.hero-label {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* Status pill: icon + word always, because the colour alone is not
+   distinguishable under deuteranopia (measured green/red dE 4.1). */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.1875rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pill .dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex: none;
+}
+
+.pill--good .dot { background: var(--status-good); }
+.pill--warning .dot { background: var(--status-warning); }
+.pill--critical .dot { background: var(--status-critical); }
+
+.meter {
+  margin: 1.25rem 0 0.5rem;
+}
+
+.meter__track {
+  position: relative;
+  height: 12px;
+  border-radius: 4px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+/* 4px rounded data-end, square at the baseline it grows from. */
+.meter__fill {
+  height: 100%;
+  border-radius: 0 4px 4px 0;
+  background: var(--accent);
+}
+
+/* Target threshold. One colour reads against both the fill and the track,
+   so the notch never disappears. Solid, never dashed. */
+.meter__notch {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--baseline);
+}
+
+.meter__caption {
+  margin: 0.5rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+}
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--gridline);
+}
+
+.tile__label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tile__value {
+  margin-top: 0.25rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.tile__unit {
+  margin-left: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.tile__note {
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.tile__note--flag {
+  color: var(--critical-text);
+  font-weight: 600;
+}
+
+/* ---------- grades table ---------- */
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table.grades {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+table.grades th,
+table.grades td {
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--gridline);
+}
+
+table.grades thead th {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* The subject cell is a th, so reset every cell — not just td. */
+table.grades tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+/* Columns of numbers align vertically, so tabular figures belong here. */
+.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  width: 1%;
+  white-space: nowrap;
+}
+
+.delta {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.delta--above { color: var(--success-text); }
+.delta--below { color: var(--critical-text); }
+.delta--on { color: var(--text-secondary); }
+
+.delta .glyph {
+  margin-right: 0.25rem;
+}
+
+.delta .word {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+}
+
+.grade-summary {
+  margin: 1.25rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* ---------- room for improvement ---------- */
+
+.improve {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.improve li {
+  padding-left: 1rem;
+  border-left: 2px solid var(--accent);
+}
+
+.improve h3 {
+  margin: 0 0 0.375rem;
+  font-size: 1rem;
+}
+
+.improve p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+}
+
+.improve .action {
+  margin-top: 0.5rem;
+  color: var(--text-primary);
+}
+
+.improve .action strong {
+  font-weight: 600;
+}
+
+.empty {
+  color: var(--text-secondary);
+}

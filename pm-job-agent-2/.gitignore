@@ -1,0 +1,10 @@
+# secrets
+.env
+
+# local database
+jobs.db
+
+# python
+venv/
+__pycache__/
+*.py[cod]
