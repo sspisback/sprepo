@@ -2,7 +2,7 @@
 
 Two small experimental projects.
 
-## [`pm-job-agent/`](pm-job-agent/) — Flask student dashboard
+## [`simple-web-app/`](simple-web-app/) — Flask student dashboard
 
 A two-page Flask app: a login page and a student dashboard showing year group,
 class, class teacher, attendance (authorised vs unauthorised absence), current
@@ -10,7 +10,7 @@ grades against target, and per-subject notes on where to improve. Sessions
 gate the dashboard; logging out clears them.
 
 ```bash
-cd pm-job-agent
+cd simple-web-app
 python3 -m venv venv && ./venv/bin/pip install -r requirements.txt
 ./venv/bin/python app.py      # http://127.0.0.1:5000
 ```
