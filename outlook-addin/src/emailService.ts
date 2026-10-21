@@ -24,6 +24,18 @@ export class MockEmailService implements EmailService {
   }
 }
 
+export function getCurrentEmailIdentity(mode: AddinMode): string {
+  if (mode === "mock") return "mock:planning-product-review";
+  if (mode !== "outlook" || typeof Office === "undefined" || !Office.context?.mailbox?.item) {
+    throw new Error("Outlook cannot identify the currently open email. Open a message and try again.");
+  }
+  const item = Office.context.mailbox.item as Office.MessageRead & { itemId?: string };
+  if (item.itemType !== Office.MailboxEnums.ItemType.Message || !item.itemId) {
+    throw new Error("Outlook did not provide an identity for the open email. Open the message in its own window and try again.");
+  }
+  return `outlook:${item.itemId}`;
+}
+
 function errorMessage(error: unknown): string {
   if (error instanceof Error && error.message) return error.message;
   return "Outlook returned an unknown error while reading the open message.";
