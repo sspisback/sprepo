@@ -48,6 +48,8 @@ export interface TaskPlanningRequest {
   currentEmailContext?: string;
   pendingProposal?: TaskProposal | null;
   allowMockFallback?: boolean;
+  skillInstructions?: string;
+  additionalContext?: string;
 }
 
 // This schema defines the response shape only. Planning rules live in SKILL.md.
@@ -146,7 +148,7 @@ function parseSchedule(value: unknown): ProposedSchedule | null {
 
 function parseModelPlan(value: unknown): ModelPlan {
   if (!isRecord(value)) throw new Error("Llama returned a task plan that was not a JSON object.");
-  const outcome = value.outcome;
+  let outcome = value.outcome as ModelOutcome;
   if (outcome !== "task_plan" && outcome !== "task_refinement" && outcome !== "clarification" && outcome !== "not_task") {
     throw new Error("Invalid task plan: outcome must be task_plan, task_refinement, clarification, or not_task.");
   }
@@ -162,7 +164,9 @@ function parseModelPlan(value: unknown): ModelPlan {
     const title = asString(raw.title, `tasks[${index}].title`).trim();
     const description = asString(raw.description, `tasks[${index}].description`).trim();
     const proposedDueDate = validateIsoDate(raw.proposedDueDate);
-    const dependencies = asStringArray(raw.dependencies, `tasks[${index}].dependencies`);
+    // A self-dependency cannot be actionable; drop that invalid relation while
+    // preserving the task as a reviewable proposal.
+    const dependencies = [...new Set(asStringArray(raw.dependencies, `tasks[${index}].dependencies`).filter((dependency) => dependency !== taskId))];
     const estimatedDurationMinutes = raw.estimatedDurationMinutes;
     if (estimatedDurationMinutes !== null && (!Number.isInteger(estimatedDurationMinutes) || Number(estimatedDurationMinutes) < 1)) {
       throw new Error(`Invalid task plan: task ${taskId} duration must be a positive whole number or null.`);
@@ -174,15 +178,29 @@ function parseModelPlan(value: unknown): ModelPlan {
 
   for (const task of tasks) {
     for (const dependency of task.dependencies) {
-      if (dependency === task.taskId || !ids.has(dependency)) {
+      if (!ids.has(dependency)) {
         throw new Error(`Invalid task plan: dependency '${dependency}' for ${task.taskId} is missing or refers to itself.`);
       }
     }
   }
   if ((outcome === "task_plan" || outcome === "task_refinement") && tasks.length === 0) throw new Error("A task proposal outcome must contain at least one task.");
-  if (outcome === "clarification" && clarificationQuestions.length === 0) throw new Error("Invalid task plan: clarification outcome must include a question.");
+  // A small model can occasionally select clarification but omit its question.
+  // Treat that malformed response as ordinary chat instead of exposing an
+  // internal schema error to the user. The orchestrator separately limits when
+  // this agent is eligible to run.
+  if (outcome === "clarification" && clarificationQuestions.length === 0) {
+    if (tasks.length === 0) outcome = "not_task";
+    else clarificationQuestions.push("What task detail should I clarify before preparing this proposal?");
+  }
   if (outcome === "not_task" && tasks.length > 0) throw new Error("Invalid task plan: not_task cannot include tasks.");
-  return { outcome, assistantMessage, clarificationQuestions, tasks };
+  return {
+    outcome,
+    assistantMessage: outcome === "not_task" && !assistantMessage.trim()
+      ? "I couldn't identify a task action to plan from that request."
+      : assistantMessage,
+    clarificationQuestions: outcome === "not_task" ? [] : clarificationQuestions,
+    tasks,
+  };
 }
 
 function addDays(date: Date, amount: number): Date {
@@ -201,7 +219,7 @@ function referenceDateMap(now: Date): Array<{ date: string; weekday: string }> {
   });
 }
 
-async function loadSkill(): Promise<string> {
+export async function loadTaskPlanningSkill(): Promise<string> {
   const response = await fetch("/api/task-planning/skill", { cache: "no-store" });
   if (!response.ok) throw new Error(`Could not load skills/task-planning/SKILL.md (HTTP ${response.status}).`);
   const skill = (await response.text()).trim();
@@ -224,7 +242,7 @@ function formatLocalDateTime(value: string, timeZone: string): string {
   }).format(new Date(value));
 }
 
-function buildSystemInstructions(skill: string, now: Date, calendar: MockCalendarSnapshot, pending?: TaskProposal | null): string {
+function buildSystemInstructions(skill: string, now: Date, calendar: MockCalendarSnapshot, pending?: TaskProposal | null, additionalContext?: string): string {
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   const pendingData = pending ? JSON.stringify({ status: pending.status, tasks: pending.tasks, clarificationQuestions: pending.clarificationQuestions }) : "none";
   const calendarLines = [
@@ -249,6 +267,7 @@ function buildSystemInstructions(skill: string, now: Date, calendar: MockCalenda
     "Calendar data from MockCalendarService:",
     calendarLines,
     `Current pending proposal, if any: ${pendingData}`,
+    ...(additionalContext ? ["Structured context from a preceding specialist agent (use only when relevant to the current request):", additionalContext] : []),
     planningPrompt,
   ].join("\n\n");
 }
@@ -261,7 +280,7 @@ export class TaskPlanningService {
   async process(request: TaskPlanningRequest): Promise<TaskPlanningResult> {
     let skill: string;
     try {
-      skill = await loadSkill();
+      skill = request.skillInstructions?.trim() || await loadTaskPlanningSkill();
     } catch (error) {
       return { kind: "invalid", text: error instanceof Error ? error.message : "Task planning instructions could not be loaded." };
     }
@@ -269,7 +288,7 @@ export class TaskPlanningService {
     const now = new Date();
     const rangeEnd = addDays(now, 30);
     const calendar = await mockCalendarService.getSnapshot(now, rangeEnd);
-    const systemInstructions = buildSystemInstructions(skill, now, calendar, request.pendingProposal);
+    const systemInstructions = buildSystemInstructions(skill, now, calendar, request.pendingProposal, request.additionalContext);
     const history = [
       ...request.history.slice(-6).map((turn) => ({ ...turn, content: turn.content.slice(-2_000) })),
       { role: "user" as const, content: request.text },

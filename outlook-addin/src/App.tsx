@@ -1,13 +1,19 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Button, Spinner } from "@fluentui/react-components";
 import { ArrowUp20Filled, BrainCircuit20Regular, ChatAdd20Regular, Sparkle20Filled } from "@fluentui/react-icons";
-import { createEmailService, detectAddinMode, getCurrentEmailIdentity, type AddinMode, type EmailData } from "./emailService";
+import { createEmailService, detectAddinMode, getCurrentEmailIdentity, getMockEmailOptions, getSelectedMockEmailId, selectMockEmail, type AddinMode, type EmailData } from "./emailService";
 import { loadEmailSummarySkill, summariseEmailBody } from "./emailSummaryService";
 import { assistantService } from "./assistantService";
+import { brainOrchestrator } from "./orchestratorService";
+import MeetingAgentCard from "./MeetingAgentCard";
+import type { MeetingAgentData, SpecialistAgentName } from "./agentContracts";
+import { isPriorityDigest } from "./priorityDigestDetector";
+import { priorityDigestService, type PriorityDigestResult } from "./priorityDigestService";
+import PriorityDigestCard from "./PriorityDigestCard";
 import { mockCalendarService } from "./mockCalendarService";
 import { mockPlannerService } from "./mockPlannerService";
 import TaskProposalCard from "./TaskProposalCard";
-import { taskPlanningService, validateProposalForApproval, type ProposedTask, type TaskProposal } from "./taskPlanningService";
+import { validateProposalForApproval, type ProposedTask, type TaskProposal } from "./taskPlanningService";
 import type { ChatTurn } from "./llmService";
 
 type Message = {
@@ -18,6 +24,8 @@ type Message = {
   summary?: string;
   source?: "mock" | "local-llm" | "error";
   taskProposal?: TaskProposal;
+  meetingResult?: MeetingAgentData;
+  handledBy?: SpecialistAgentName[];
   isCreatingTasks?: boolean;
   proposalFeedback?: string;
   plannerResult?: string;
@@ -25,6 +33,10 @@ type Message = {
 type AiStatus = "checking" | "connected" | "unavailable";
 type EmailContext = { identity: string; email: EmailData };
 type SavedConversation = { version: 1; messages: Message[] };
+type PriorityWorkflowState =
+  | { status: "checking"; identity: string }
+  | { status: "ready" | "none"; identity: string; result: PriorityDigestResult }
+  | { status: "error"; identity: string; error: string };
 const conversationStorageKey = "brain-assistant.conversation.v1";
 const welcome = "Hi! I'm Brain. How can I help you today?";
 const unavailableMessage = "Local AI is currently unavailable. Please check that Ollama is running.";
@@ -57,10 +69,11 @@ function isEmailDependent(text: string, emailContextUsed: boolean): boolean {
 function getHistory(messages: Message[]): ChatTurn[] {
   return messages.flatMap((message): ChatTurn[] => {
     if (message.role === "user") return [{ role: "user", content: message.text }];
-    if (message.taskProposal) {
-      return [{ role: "assistant", content: `${message.text}\nCurrent task proposal: ${JSON.stringify(message.taskProposal.tasks)}` }];
-    }
-    const content = message.summary || message.text;
+    const content = [
+      message.summary || message.text,
+      message.taskProposal ? `Structured task proposal: ${JSON.stringify({ status: message.taskProposal.status, tasks: message.taskProposal.tasks, clarificationQuestions: message.taskProposal.clarificationQuestions })}` : "",
+      message.meetingResult ? `Structured meeting result: ${JSON.stringify(message.meetingResult)}` : "",
+    ].filter(Boolean).join("\n");
     return content && message.source !== "error" ? [{ role: "assistant", content }] : [];
   });
 }
@@ -71,6 +84,8 @@ export default function App() {
   const [typing, setTyping] = useState(false);
   const [historyStorageAvailable, setHistoryStorageAvailable] = useState(true);
   const [mode, setMode] = useState<AddinMode>("detecting");
+  const [mockEmailId, setMockEmailId] = useState(getSelectedMockEmailId);
+  const [priorityWorkflow, setPriorityWorkflow] = useState<PriorityWorkflowState | null>(null);
   const [aiStatus, setAiStatus] = useState<AiStatus>("checking");
   const [checkingAi, setCheckingAi] = useState(false);
   const nextId = useRef(messages.reduce((highest, message) => Math.max(highest, message.id), -1) + 1);
@@ -83,6 +98,9 @@ export default function App() {
       (message.taskProposal.status === "proposal" || message.taskProposal.status === "clarification"))?.taskProposal ?? null,
   );
   const approvalLocks = useRef(new Set<string>());
+  const priorityDigestCache = useRef(new Map<string, PriorityDigestResult>());
+  const priorityDigestRequests = useRef(new Set<string>());
+  const priorityInspectionSequence = useRef(0);
 
   useEffect(() => {
     try {
@@ -126,6 +144,78 @@ export default function App() {
       if (!quiet) setCheckingAi(false);
     }
   }, []);
+
+  const inspectPriorityDigest = useCallback(async (expectedIdentity?: string, force = false) => {
+    if (mode !== "mock" && mode !== "outlook") return;
+    let sequence = priorityInspectionSequence.current;
+    let identity: string;
+    let email: EmailData;
+    try {
+      identity = getCurrentEmailIdentity(mode);
+      if (expectedIdentity && identity !== expectedIdentity) return;
+      if (priorityDigestRequests.current.has(identity) && !force) return;
+      sequence = ++priorityInspectionSequence.current;
+      email = await createEmailService(mode).getCurrentEmail();
+      if (sequence !== priorityInspectionSequence.current || getCurrentEmailIdentity(mode) !== identity) return;
+    } catch (error) {
+      if (expectedIdentity && sequence === priorityInspectionSequence.current) {
+        setPriorityWorkflow({ status: "error", identity: expectedIdentity, error: error instanceof Error ? error.message : "The current email could not be read." });
+      }
+      return;
+    }
+
+    if (!isPriorityDigest(email)) {
+      setPriorityWorkflow(null);
+      return;
+    }
+
+    if (!force) {
+      const cached = priorityDigestCache.current.get(identity);
+      if (cached) {
+        setPriorityWorkflow({ status: cached.suggestPreparation ? "ready" : "none", identity, result: cached });
+        return;
+      }
+    } else {
+      priorityDigestCache.current.delete(identity);
+    }
+    if (priorityDigestRequests.current.has(identity)) return;
+
+    priorityDigestRequests.current.add(identity);
+    setPriorityWorkflow({ status: "checking", identity });
+    try {
+      const { result, provider } = await priorityDigestService.analyse(email);
+      if (provider !== "local-llm") throw new Error("The Priority Digest workflow requires local Llama. No mock interpretation was used.");
+      if (sequence !== priorityInspectionSequence.current || getCurrentEmailIdentity(mode) !== identity) return;
+      priorityDigestCache.current.set(identity, result);
+      setPriorityWorkflow({ status: result.suggestPreparation ? "ready" : "none", identity, result });
+    } catch (error) {
+      if (sequence === priorityInspectionSequence.current) {
+        setPriorityWorkflow({ status: "error", identity, error: error instanceof Error ? error.message : "Priority Digest analysis failed." });
+      }
+    } finally {
+      priorityDigestRequests.current.delete(identity);
+    }
+  }, [mode]);
+
+  useEffect(() => {
+    if (mode === "mock") {
+      void inspectPriorityDigest();
+      return;
+    }
+    if (mode !== "outlook") return;
+
+    void inspectPriorityDigest();
+    if (typeof Office === "undefined" || !Office.context?.mailbox || !Office.context.requirements.isSetSupported("Mailbox", "1.5")) return;
+
+    const mailbox = Office.context.mailbox;
+    const onItemChanged = () => { void inspectPriorityDigest(); };
+    try {
+      mailbox.addHandlerAsync(Office.EventType.ItemChanged, onItemChanged);
+      return () => mailbox.removeHandlerAsync(Office.EventType.ItemChanged);
+    } catch {
+      // Older classic Outlook builds still get the automatic inspection when the pane opens.
+    }
+  }, [mode, mockEmailId, inspectPriorityDigest]);
 
   useEffect(() => {
     void checkAi(true);
@@ -181,36 +271,37 @@ export default function App() {
 
       const useEmailContext = Boolean(activeContext && questionNeedsEmail(text));
       try {
-        const result = await taskPlanningService.process({
-          text,
-          history: getHistory(emailChanged ? [] : priorMessages),
+        const history = getHistory(emailChanged ? [] : priorMessages);
+        const latestMeetingResult = [...priorMessages].reverse().find((message) => message.meetingResult)?.meetingResult;
+        const result = await brainOrchestrator.process({
+          prompt: text,
+          conversationContext: history,
           currentEmailContext: useEmailContext ? activeContext?.email.body : undefined,
-          pendingProposal: pendingProposal.current,
+          pendingTaskProposal: pendingProposal.current,
+          latestMeetingResult,
           allowMockFallback: !isEmailDependent(text, useEmailContext),
         });
         if (turn === turnId.current) {
-          if (result.kind === "task-proposal") {
+          const taskProposal = result.agentResults.find((agentResult) => agentResult.taskProposal)?.taskProposal;
+          const meetingResult = result.agentResults.find((agentResult) => agentResult.meeting)?.meeting;
+          if (taskProposal) {
             const previousProposal = pendingProposal.current;
-            if (previousProposal) {
+            if (previousProposal && previousProposal.proposalId !== taskProposal.proposalId) {
               setMessages((items) => items.map((message) => message.taskProposal?.proposalId === previousProposal.proposalId
                 ? { ...message, taskProposal: { ...previousProposal, status: "superseded" } }
                 : message));
             }
-            pendingProposal.current = result.proposal;
-            setAiStatus("connected");
-            addAssistant(result.proposal.assistantMessage || "Here is a task proposal for your review.", "local-llm", { taskProposal: result.proposal });
-          } else if (result.kind === "chat") {
-            setAiStatus(result.provider === "local-llm" ? "connected" : "unavailable");
-            addAssistant(result.text, result.provider);
-          } else if (result.kind === "mock") {
-            setAiStatus("unavailable");
-            addAssistant(result.text, "mock");
-          } else if (result.kind === "unavailable") {
-            setAiStatus("unavailable");
-            addAssistant(result.text, "error");
-          } else {
-            addAssistant(result.text, "error");
+            pendingProposal.current = taskProposal;
           }
+          const source: Message["source"] = result.provider === "mock" || result.status === "mock-fallback"
+            ? "mock"
+            : result.status === "error" || result.status === "unavailable" ? "error" : "local-llm";
+          setAiStatus(source === "error" || source === "mock" ? "unavailable" : "connected");
+          addAssistant(result.response || (meetingResult ? "" : "I couldn't complete that request."), source, {
+            ...(taskProposal ? { taskProposal } : {}),
+            ...(meetingResult ? { meetingResult } : {}),
+            ...(result.handledBy.length ? { handledBy: result.handledBy } : {}),
+          });
         }
       } catch (error) {
         if (turn === turnId.current) {
@@ -401,6 +492,19 @@ export default function App() {
       <span className={`mode-badge ${mode}`} aria-live="polite">
         {mode === "mock" ? "Mock Mode" : mode === "outlook" ? "Outlook Live" : mode === "unavailable" ? "Office.js unavailable" : "Connecting"}
       </span>
+      {mode === "mock" && <select
+        className="mock-email-picker"
+        aria-label="Select a browser mock email"
+        value={mockEmailId}
+        onChange={(event) => {
+          const nextId = event.currentTarget.value;
+          selectMockEmail(nextId);
+          setPriorityWorkflow(null);
+          setMockEmailId(nextId);
+        }}
+      >
+        {getMockEmailOptions().map((email) => <option key={email.id} value={email.id}>{email.label}</option>)}
+      </select>}
       <div className={`ai-status ${aiStatus}`} aria-live="polite">
         <i />{aiStatus === "connected" ? "Local AI Connected" : aiStatus === "checking" ? "Checking AI" : "Local AI unavailable"}
         {aiStatus !== "connected" && <Button appearance="subtle" size="small" disabled={checkingAi} onClick={() => void checkAi()} className="retry-button">{checkingAi ? "Checking…" : "Retry"}</Button>}
@@ -408,7 +512,7 @@ export default function App() {
       <Button appearance="subtle" icon={<ChatAdd20Regular />} onClick={newChat} aria-label="New chat" title="New chat" className="new-chat">New chat</Button>
     </header>
     <section className="conversation" aria-label="Chat conversation" aria-live="polite">
-      {messages.length === 0 ? <div className="welcome">
+      {messages.length === 0 && !priorityWorkflow ? <div className="welcome">
         <div className="welcome-orb"><Sparkle20Filled /></div>
         <h1>{welcome}</h1>
         <p>Ask me to draft, plan, summarize, or think something through.</p>
@@ -420,8 +524,10 @@ export default function App() {
             <span className="message-author">
               {message.role === "user" ? "You" : message.source === "local-llm" ? "Brain · Local AI" : message.source === "error" ? "Brain · status" : "Brain · Mock Response"}
             </span>
+            {message.role === "assistant" && message.handledBy && <span className="agent-indicator">{message.handledBy.map((agent) => `${agent[0].toUpperCase()}${agent.slice(1)} Agent`).join(" · ")}</span>}
             {message.email && message.summary ? <EmailSummary email={message.email} summary={message.summary} /> : message.email ? <EmailDetails email={message.email} /> : <>
               {message.text && <p>{message.text}</p>}
+              {message.meetingResult && <MeetingAgentCard key={`${message.id}-${message.meetingResult.intent}`} data={message.meetingResult} />}
               {message.taskProposal && <TaskProposalCard
                 key={message.taskProposal.proposalId}
                 proposal={message.taskProposal}
@@ -437,6 +543,22 @@ export default function App() {
             </>}
           </div>
         </article>)}
+        {priorityWorkflow && <article className="message assistant priority-workflow-message" key={`priority-workflow-${priorityWorkflow.identity}`}>
+          <span className="message-icon"><BrainCircuit20Regular /></span>
+          <div className="message-content">
+            <span className="message-author">{priorityWorkflow.status === "checking" ? "Brain · Local AI" : priorityWorkflow.status === "error" ? "Brain · status" : "Brain · Local AI"}</span>
+            {priorityWorkflow.status === "checking" && <div className="priority-analysis-status" role="status"><Spinner size="tiny" /> Analysing the Daily Priority Digest locally…</div>}
+            {priorityWorkflow.status === "error" && <div className="priority-analysis-error" role="alert">
+              <p>I couldn't analyse the Daily Priority Digest. {priorityWorkflow.error}</p>
+              <Button appearance="secondary" size="small" onClick={() => void inspectPriorityDigest(priorityWorkflow.identity, true)}>Retry digest analysis</Button>
+            </div>}
+            {priorityWorkflow.status === "none" && <p>{priorityWorkflow.result.importantMeetingsTodaySectionFound
+              ? "I found the IMPORTANT MEETINGS TODAY section, but no meetings to prepare for."
+              : "I couldn't find an IMPORTANT MEETINGS TODAY section in this Daily Priority Digest."}</p>}
+            {priorityWorkflow.status === "ready" && <PriorityDigestCard key={priorityWorkflow.identity} emailIdentity={priorityWorkflow.identity} digest={priorityWorkflow.result} />}
+            {(priorityWorkflow.status === "ready" || priorityWorkflow.status === "none") && <Button appearance="subtle" size="small" onClick={() => void inspectPriorityDigest(priorityWorkflow.identity, true)} className="priority-reanalyse-button">Reanalyse digest</Button>}
+          </div>
+        </article>}
         {typing && <div className="message assistant"><span className="message-icon"><BrainCircuit20Regular /></span><div className="typing" aria-label="Brain is thinking"><i/><i/><i/></div></div>}
         <div ref={bottom}/>
       </div>}
@@ -453,7 +575,7 @@ export default function App() {
         <Button type="submit" appearance="primary" icon={<ArrowUp20Filled />} disabled={!input.trim() || typing} aria-label="Send message" title="Send message" className="send-button" />
       </form>
       <p className="disclaimer">
-        {mode === "mock" ? "Browser Mock Mode uses a sample email; all inference stays on this computer." : mode === "outlook" ? "Only the open email is read when you summarise; email context is sent only to local Ollama when relevant." : "Email content is sent only to local Ollama when you summarise or ask a related follow-up."} {historyStorageAvailable ? "Chat history is saved in this device's local app storage. New chat clears it." : "Local storage is unavailable; this chat may not survive a pane restart."}
+        {mode === "mock" ? "Choose a sample email above; matching Priority Digests are analysed by local Ollama." : mode === "outlook" ? "Only the open email is read; email content is sent to local Ollama when needed." : "Email content is sent only to local Ollama when you summarise or ask a related follow-up."} {historyStorageAvailable ? "Chat history is saved in this device's local app storage. New chat clears it." : "Local storage is unavailable; this chat may not survive a pane restart."}
       </p>
     </footer>
   </main>;

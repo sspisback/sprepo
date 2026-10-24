@@ -4,6 +4,9 @@ export type MockAppointment = {
   startAt: string;
   endAt: string;
   location: string;
+  eventType?: "meeting" | "appointment";
+  attendees?: string[];
+  description?: string;
 };
 
 export type AvailabilityDay = {
@@ -42,21 +45,41 @@ function nextMonday(from: Date): Date {
   return new Date(from.getFullYear(), from.getMonth(), from.getDate() + daysUntil, 0, 0, 0, 0);
 }
 
+function addLocalDays(from: Date, count: number): Date {
+  return new Date(from.getFullYear(), from.getMonth(), from.getDate() + count, 0, 0, 0, 0);
+}
+
 function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number): boolean {
   return aStart < bEnd && aEnd > bStart;
 }
 
 export class MockCalendarService {
   async getAppointmentsForRange(rangeStart: Date, rangeEnd: Date): Promise<MockAppointment[]> {
-    const monday = nextMonday(rangeStart);
-    const dentistStart = atLocalTime(monday, 10);
-    const dentistEnd = atLocalTime(monday, 11);
-    const friday = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), rangeStart.getDate() + ((5 - rangeStart.getDay() + 7) % 7 || 7));
-    const checkInStart = atLocalTime(friday, 14);
-    const checkInEnd = atLocalTime(friday, 14, 30);
+    const today = addLocalDays(rangeStart, 0);
+    const tomorrow = addLocalDays(today, 1);
+    const friday = addLocalDays(today, (5 - today.getDay() + 7) % 7);
+    const monday = nextMonday(today);
+    const makeEvent = (input: {
+      id: string; title: string; day: Date; start: [number, number]; end: [number, number];
+      location: string; attendees: string[]; description: string; eventType?: "meeting" | "appointment";
+    }): MockAppointment => ({
+      id: `${input.id}-${dateKey(input.day)}`,
+      title: input.title,
+      startAt: localIso(atLocalTime(input.day, ...input.start)),
+      endAt: localIso(atLocalTime(input.day, ...input.end)),
+      location: input.location,
+      attendees: input.attendees,
+      description: input.description,
+      eventType: input.eventType ?? "meeting",
+    });
     const fictional: MockAppointment[] = [
-      { id: "mock-calendar-dentist", title: "Dentist appointment", startAt: localIso(dentistStart), endAt: localIso(dentistEnd), location: "Fictional calendar event" },
-      { id: "mock-calendar-check-in", title: "Team check-in", startAt: localIso(checkInStart), endAt: localIso(checkInEnd), location: "Fictional calendar event" },
+      makeEvent({ id: "mock-atlas-steerco", title: "Project Atlas SteerCo", day: today, start: [10, 0], end: [10, 45], location: "Microsoft Teams (simulated)", attendees: ["Alex Morgan — Project Sponsor", "Priya Shah — Finance Lead"], description: "Decide the Phase 2 scope and review the delivery risks." }),
+      makeEvent({ id: "mock-regional-checkin", title: "Regional Operations Check-in", day: today, start: [10, 30], end: [11, 0], location: "Meeting Room 2 (simulated)", attendees: ["Jordan Lee — Operations", "Sam Taylor — Delivery"], description: "Review regional delivery blockers and ownership." }),
+      makeEvent({ id: "mock-northwind-renewal", title: "Northwind renewal prep", day: today, start: [14, 0], end: [14, 30], location: "Microsoft Teams (simulated)", attendees: ["Sofia Laine — Account Director", "Mina Patel — Commercial"], description: "Review January pricing options before the renewal discussion." }),
+      makeEvent({ id: "mock-revenue-forecast", title: "Revenue forecast review", day: tomorrow, start: [9, 30], end: [10, 15], location: "Microsoft Teams (simulated)", attendees: ["James Carter — Finance", "Aisha Khan — Sales"], description: "Compare forecast assumptions and agree follow-up owners." }),
+      makeEvent({ id: "mock-product-readiness", title: "Product launch readiness", day: tomorrow, start: [11, 0], end: [11, 45], location: "Meeting Room 4 (simulated)", attendees: ["Maya Chen — Product", "Noah Reed — Engineering"], description: "Confirm launch criteria, open risks and the decision deadline." }),
+      makeEvent({ id: "mock-team-checkin", title: "Team check-in", day: friday, start: [14, 0], end: [14, 30], location: "Fictional calendar event", attendees: ["Jordan Lee", "Sam Taylor"], description: "Share weekly progress and raise blockers." }),
+      makeEvent({ id: "mock-calendar-dentist", title: "Dentist appointment", day: monday, start: [10, 0], end: [11, 0], location: "Fictional calendar event", attendees: [], description: "Personal appointment.", eventType: "appointment" }),
     ];
     return fictional.filter((appointment) => {
       const start = Date.parse(appointment.startAt);

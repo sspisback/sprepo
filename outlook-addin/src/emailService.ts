@@ -12,20 +12,102 @@ export interface EmailService {
 
 export type AddinMode = "detecting" | "mock" | "outlook" | "unavailable";
 
+export type MockEmailOption = { id: string; label: string };
+
+type MockEmailFixture = EmailData & MockEmailOption;
+
+const priorityDigestBody = [
+  "IMPORTANT MEETINGS TODAY",
+  "10:00 — SteerCo – Project Atlas",
+  "Northwind Energy · Phase 2 scope decision",
+  "Prepare me",
+  "14:00 — Northwind renewal prep",
+  "With Sofia Laine · Pricing options for January",
+  "Prepare me",
+].join("\n");
+
+const mockEmails: MockEmailFixture[] = [
+  {
+    id: "product-review",
+    label: "Planning for the product review · normal email",
+    senderName: "Jordan Lee",
+    senderEmail: "jordan.lee@example.com",
+    receivedAt: "2026-10-20T09:42:00.000Z",
+    subject: "Planning for the product review",
+    body: "Hi team,\n\nAhead of Thursday's product review, please send me your latest launch status and any risks that need a decision. I will combine the updates into a short agenda so we can focus on the open items.\n\nCould you share your notes by Wednesday afternoon? Please include the owner, expected completion date, and any dependencies for each risk.\n\nThanks,\nJordan",
+  },
+  {
+    id: "priority-digest",
+    label: "Daily Priority Digest · valid (2 meetings)",
+    senderName: "Soumya Pal",
+    senderEmail: "ssp.soumya@gmail.com",
+    receivedAt: "2026-10-21T07:30:00.000Z",
+    subject: "Daily Priority Digest",
+    body: priorityDigestBody,
+  },
+  {
+    id: "priority-wrong-sender",
+    label: "Daily Priority Digest · wrong sender",
+    senderName: "Digest Service",
+    senderEmail: "digest@example.com",
+    receivedAt: "2026-10-21T07:30:00.000Z",
+    subject: "Daily Priority Digest",
+    body: priorityDigestBody,
+  },
+  {
+    id: "priority-wrong-subject",
+    label: "Priority Digest · wrong subject",
+    senderName: "Soumya Pal",
+    senderEmail: "ssp.soumya@gmail.com",
+    receivedAt: "2026-10-21T07:30:00.000Z",
+    subject: "Priority Digest",
+    body: priorityDigestBody,
+  },
+  {
+    id: "priority-no-meetings",
+    label: "Daily Priority Digest · no meetings",
+    senderName: "Soumya Pal",
+    senderEmail: "ssp.soumya@gmail.com",
+    receivedAt: "2026-10-21T07:30:00.000Z",
+    subject: "Daily Priority Digest",
+    body: "IMPORTANT MEETINGS TODAY\nNo meetings are listed today.",
+  },
+  {
+    id: "priority-no-section",
+    label: "Daily Priority Digest · section missing",
+    senderName: "Soumya Pal",
+    senderEmail: "ssp.soumya@gmail.com",
+    receivedAt: "2026-10-21T07:30:00.000Z",
+    subject: "Daily Priority Digest",
+    body: "TODAY'S PRIORITIES\nReview the project updates and follow up on open actions.",
+  },
+];
+
+let selectedMockEmailId = mockEmails[0].id;
+
+export function getMockEmailOptions(): MockEmailOption[] {
+  return mockEmails.map(({ id, label }) => ({ id, label }));
+}
+
+export function getSelectedMockEmailId(): string {
+  return selectedMockEmailId;
+}
+
+export function selectMockEmail(id: string): void {
+  if (!mockEmails.some((email) => email.id === id)) throw new Error("Unknown browser mock email.");
+  selectedMockEmailId = id;
+}
+
 export class MockEmailService implements EmailService {
   async getCurrentEmail(): Promise<EmailData> {
-    return {
-      senderName: "Jordan Lee",
-      senderEmail: "jordan.lee@example.com",
-      receivedAt: "2026-10-20T09:42:00.000Z",
-      subject: "Planning for the product review",
-      body: "Hi team,\n\nAhead of Thursday's product review, please send me your latest launch status and any risks that need a decision. I will combine the updates into a short agenda so we can focus on the open items.\n\nCould you share your notes by Wednesday afternoon? Please include the owner, expected completion date, and any dependencies for each risk.\n\nThanks,\nJordan",
-    };
+    const email = mockEmails.find((candidate) => candidate.id === selectedMockEmailId) ?? mockEmails[0];
+    const { id: _id, label: _label, ...data } = email;
+    return { ...data };
   }
 }
 
 export function getCurrentEmailIdentity(mode: AddinMode): string {
-  if (mode === "mock") return "mock:planning-product-review";
+  if (mode === "mock") return `mock:${selectedMockEmailId}`;
   if (mode !== "outlook" || typeof Office === "undefined" || !Office.context?.mailbox?.item) {
     throw new Error("Outlook cannot identify the currently open email. Open a message and try again.");
   }

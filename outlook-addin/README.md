@@ -87,6 +87,37 @@ Task-related requests use the same local Llama model. Before each request, the a
 
 The calendar and planner are simulations only. `MockCalendarService` supplies fictional appointments (including a Dentist appointment next Monday) and work-hour availability. `MockPlannerService` stores approved tasks in memory for the current page session and assigns `mock-task-0001` style IDs. Restarting or refreshing the app clears those mock tasks. No Microsoft Calendar, Planner, Graph, authentication, database, or external AI service is used.
 
+## Skill-driven multi-agent chat
+
+Free-text chat requests are routed by the local Llama model through `BrainOrchestrator`. It loads [`skills/orchestrator.md`](skills/orchestrator.md) for routing, validates the returned plan, then invokes the smallest set of specialist agents. The Task Agent reuses `skills/task-planning/SKILL.md` and the existing review/approval workflow. The Meeting Agent loads [`skills/meeting.md`](skills/meeting.md) and retrieves only fictional records from `MockCalendarService`. The General Research Agent loads [`skills/research.md`](skills/research.md) and answers from local model knowledge; it does not search the web or company documents.
+
+The Orchestrator can run independent agents in parallel or pass structured results sequentially. For example, a request to list tomorrow's meetings and create a task for the first one retrieves the simulated meetings first, then passes their structured details to the Task Agent. The Task Agent only proposes a task: `MockPlannerService` is still called only after you select **Approve & Create Tasks**. Meeting preparation also requires selecting a displayed meeting and clicking **Prepare**; its confirmation is simulated. The app labels meeting results as simulated and makes no real calendar, Planner, email, Graph, or cloud AI calls.
+
+The skills are served by local Vite routes and loaded on each relevant request. Edit the Markdown files in VS Code and save; the next request uses the updated content without changing the TypeScript or Outlook manifest. Routing plans and structured task/meeting fields are runtime-validated before the UI displays actions; general research is plain text from the local model. A model failure is reported; dependent steps are skipped rather than receiving invented data. If one independent agent succeeds and another fails, successful results are retained with a partial-failure status.
+
+To try the agents in the browser, open `https://localhost:3000` while Ollama is running and ask: `Create a task to chase James for the revenue report by Friday.`, `Show me today's meetings.`, `Which meetings are important this week?`, `Prepare me for the Project Atlas SteerCo.`, or `What is the difference between revenue and profit?`. For a dependent multi-agent request, use `Show me tomorrow's meetings and create a task to prepare for the first one.`. Review the proposed task; no task is created until you approve it. The mock meeting data changes relative to the machine's current date, and the local model can still misunderstand intent or importance, so review all results.
+
+## Daily Priority Digest workflow
+
+When Brain opens or the current email changes, the app checks the email's sender and subject with trimmed, case-insensitive exact matching. Only `ssp.soumya@gmail.com` plus `Daily Priority Digest` starts this workflow. The check is deterministic; Llama does not decide whether an email qualifies. Matching messages are analysed automatically, with no chat command.
+
+The workflow loads [`skills/priority.md`](skills/priority.md) from the local Vite server for each analysis and passes the skill plus the current email body and received date to local Ollama. Llama extracts the meeting details as structured JSON; TypeScript validates the response before the UI offers any preparation action. If Ollama is unavailable or its output is invalid, Brain shows an error and offers a retry. A digest with no meetings does not show the preparation action. Editing the skill file affects the next analysis without a server restart; select **Reanalyse digest** in the current result to run it again against the updated skill.
+
+In Browser Mock Mode, use the **Mock email** selector in the header to choose among the valid digest and four negative fixtures (wrong sender, wrong subject, no meetings, or missing section). The valid fixture should identify the 10:00 SteerCo – Project Atlas and 14:00 Northwind renewal prep meetings. The negative sender/subject fixtures should not start the workflow; the two remaining fixtures should analyse without offering preparation. In Outlook Live Mode, open a message and launch Brain; the same exact sender/subject check runs on the currently open message. Outlook item changes are rechecked when the host supports the relevant Office.js event.
+
+To test preparation, choose a meeting from the list shown immediately after analysis, then click **Prepare**. Brain displays the requested simulated confirmation after a short delay. `MockPrepareService` is local and idempotent for a given email and meeting. It does not create a real brief, send email, use a calendar, or call Graph. The Outlook manifest and its permissions are unchanged.
+
+### Verify the priority workflow
+
+1. Start Ollama and the app, then open `https://localhost:3000` in Chrome or Edge. Confirm **Local AI Connected**.
+2. Select **Daily Priority Digest · valid (2 meetings)** and wait for local analysis. Check both meeting titles and times, then use the preparation controls and verify the confirmation says it is simulated.
+3. Select each negative fixture. Wrong sender and wrong subject should produce no digest workflow. No-meetings and missing-section fixtures should not offer meeting preparation.
+4. Edit `skills/priority.md`, save, and select **Reanalyse digest** to run a fresh analysis against the updated skill. The server loads the file on each analysis.
+5. Stop Ollama and retry the valid fixture; Brain should show an error and a retry option, with no preparation action. Restart Ollama and retry.
+6. For Outlook Live Mode, start the local server, open a matching email in Classic Outlook, and open Brain. Confirm automatic analysis, then check the same workflow and simulated preparation confirmation. The manifest remains unchanged.
+
+The fixture extraction and simulated preparation paths can be exercised in the browser without Outlook or Graph. Real Outlook item retrieval still requires a manual check inside the Outlook task pane. Model extraction quality depends on the installed local model; verify meeting details against the email before using them.
+
 ### Standalone Microsoft Planner Graph client (not connected to the UI)
 
 [`src/plannerGraphService.ts`](src/plannerGraphService.ts) is a separate Graph client prototype. It can list the signed-in user's tasks and plans, list buckets, and create a task in an existing basic Planner plan. It accepts a delegated access-token provider; it does not implement sign-in, store tokens, modify the manifest, or get called by the chat/task UI. Planner task creation requires delegated `Tasks.ReadWrite` consent and a plan/bucket the signed-in user can access. Graph's Planner API does not support premium plans.
