@@ -1,6 +1,22 @@
 # sprepo
 
-Two small experimental projects.
+## Brain Outlook Add-in — AI Productivity Assistant
+
+An experimental Microsoft Outlook Add-in built with React, TypeScript and Office.js.
+
+**Key capabilities:**
+- AI-powered email summarisation using locally running Llama models through Ollama.
+- Skill-driven Orchestrator with Task, Meeting and General Research Agents.
+- Editable Markdown skill files controlling agent behaviour.
+- Mock Calendar and Planner services for testing agent workflows.
+- Priority Digest recognition and proactive meeting-preparation suggestions.
+- Local AI inference without requiring cloud LLM APIs.
+
+**Technology:** React, TypeScript, Node.js, Office.js, Ollama and Llama.
+
+**Purpose:** Experiment with AI agents, skills, orchestration and integration within Outlook.
+
+See the `outlook-addin/` folder for the application source code.
 
 ## [`simple-web-app/`](simple-web-app/) — Flask student dashboard
 
