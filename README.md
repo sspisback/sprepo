@@ -1,5 +1,140 @@
 # sprepo
 
+# 🧠 Brain — Agentic AI Productivity Assistant
+
+### 🚀 From a simple Outlook Add-in to a multi-agent AI assistant with local LLMs, RAG, skills and autonomous workflows.
+
+**Brain** is a hands-on experiment in building an **agentic AI productivity assistant** that lives inside Microsoft Outlook — combining conversational AI, specialist agents, private knowledge retrieval and human-in-the-loop workflows.
+
+Built using **React, TypeScript, Node.js, Office.js and Ollama**, Brain explores how AI can move beyond answering questions to understanding intent, retrieving context, coordinating agents and proposing actions.
+
+The interesting part? **The AI runs locally.** No cloud LLM API is required for the prototype.
+
+## ✨ What's Under the Hood?
+
+### 🤖 Multi-Agent Orchestration
+
+A custom-built Orchestrator uses an LLM to interpret natural-language requests and delegate work to specialist agents:
+
+- **Task Agent** — Extracts actionable tasks, identifies dependencies and deadlines, and proposes tasks for approval.
+- **Meeting Agent** — Handles meeting queries, calendar context and preparation workflows.
+- **Research Agent** — Answers general questions and retrieves relevant knowledge from uploaded documents.
+- **Lab Agent** — Transforms emails and instructions into structured requests for analysis or slide creation.
+
+Supports multi-agent routing, contextual follow-ups and shared conversation state.
+
+### 🧩 Skill-Driven AI
+
+Agent behaviour is controlled through **editable Markdown skill files**, separating natural-language instructions from application code.
+
+Skills define how agents interpret requests, summarise emails, identify tasks, extract meetings and generate prompts.
+
+Change a skill → change the agent's behaviour — without rewriting the underlying TypeScript logic.
+
+### 📚 Private Knowledge with RAG
+
+Brain uses **Retrieval-Augmented Generation (RAG)** to answer questions using locally stored documents.
+
+- Upload PDF, Word and text files.
+- Extract and chunk document content.
+- Generate embeddings locally using Ollama.
+- Store searchable vectors and text in **LanceDB**.
+- Retrieve relevant passages using semantic similarity search.
+- Supply retrieved context to the LLM and display source references.
+
+No model retraining required. Knowledge remains separate from model weights.
+
+### 🧠 Local LLM Inference
+
+Powered by **Ollama + Llama**, with a modular architecture designed to support alternative local models.
+
+- Local reasoning and inference.
+- LLM-based intent classification.
+- Structured output and task extraction.
+- Multi-turn conversational context.
+- Graceful mock-service fallback when the LLM is unavailable.
+
+### 📧 Outlook-Native AI
+
+Built as a Microsoft Outlook Office.js Add-in with an embedded chat interface.
+
+Capabilities include:
+
+- Reading the currently opened email.
+- AI-generated email summaries.
+- Automatic recognition of special Priority Digest emails.
+- Skill-driven extraction of meetings and priorities.
+- Contextual recommendations and meeting-preparation actions.
+
+### ⚡ Human-in-the-Loop Agent Workflows
+
+Brain doesn't blindly execute actions.
+
+It proposes, explains and waits for approval.
+
+- Convert free-text instructions into structured task plans.
+- Review and edit tasks before simulated Planner creation.
+- Identify meetings and request preparation.
+- Generate editable prompts for AI analysis or slide creation.
+- Approve requests before mock service execution.
+
+Calendar, Planner, meeting preparation and Lab integrations are currently simulated through modular mock services.
+
+## 🏗️ Architecture
+
+**React Chat UI → LLM Orchestrator → Specialist Agents → Skills + Tools → LLM → User**
+
+Supporting components:
+
+- **Ollama / Llama:** Local model inference and reasoning.
+- **LanceDB:** Local vector storage and semantic retrieval.
+- **Markdown Skills:** Editable agent instructions.
+- **Office.js:** Outlook email integration.
+- **Mock Services:** Simulated external system interactions.
+- **Node.js / TypeScript:** Agent execution and service orchestration.
+
+## 🛠️ Tech Stack
+
+**Frontend:** React · TypeScript · Vite · CSS
+
+**Backend:** Node.js · TypeScript
+
+**AI:** Ollama · Llama · Prompt Engineering · Structured Outputs
+
+**Agentic Architecture:** Custom Orchestrator · Specialist Agents · Skill-Driven Routing · Human-in-the-Loop
+
+**Knowledge:** LanceDB · Embeddings · Vector Search · RAG
+
+**Integration:** Microsoft Office.js · Mock Microsoft Planner / Calendar · Mock Lab Services
+
+## 🧪 What I'm Experimenting With
+
+This project is a practical exploration of:
+
+- How LLMs can orchestrate specialist agents.
+- How natural-language skills influence agent behaviour.
+- How private knowledge can be retrieved without retraining models.
+- How conversation memory differs from persistent knowledge.
+- How AI agents can combine reasoning, retrieval and tool execution.
+- How human approval can be embedded into agentic workflows.
+- How existing desktop productivity tools can become AI-powered interfaces.
+
+## 🔬 Project Status
+
+**Experimental prototype / AI engineering playground**
+
+Built iteratively using VS Code and OpenAI Codex, with a focus on understanding and testing agentic AI architecture rather than building a production-ready system.
+
+Real enterprise integrations are intentionally mocked where appropriate.
+
+---
+
+### 💡 The Big Idea
+
+**AI becomes significantly more useful when it can understand intent, retrieve relevant knowledge, coordinate specialist capabilities and help users take action — not just generate text.**
+
+Brain is my experiment in making that happen, one agent, skill and tool at a time.
+
 ## Brain Outlook Add-in — AI Productivity Assistant
 
 An experimental Microsoft Outlook Add-in built with React, TypeScript and Office.js.
