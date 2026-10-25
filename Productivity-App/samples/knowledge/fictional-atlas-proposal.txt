@@ -1,0 +1,17 @@
+FICTIONAL PROJECT PROPOSAL: ATLAS SERVICE DESK
+Date: 2 September 2026
+
+PURPOSE
+Northstar Works proposes a six-week pilot of Atlas, a fictional internal service desk knowledge assistant. The pilot will help 30 support analysts find approved troubleshooting guidance more quickly.
+
+SCOPE
+The pilot will index 120 approved TXT, DOCX, and text-based PDF procedures selected by the service desk owner. It will run on a local workstation using local inference. The pilot will not connect to email, customer systems, OneDrive, or SharePoint.
+
+MEASURES OF SUCCESS
+The project team will compare average time to locate a procedure before and during the pilot. The target is a 25% reduction without an increase in incorrect answers. Analysts will review each answer and its source reference.
+
+DEPENDENCIES AND RISKS
+The service desk owner must approve the source documents and remove obsolete procedures before indexing. Scanned PDFs will not be searchable unless their content is separately made available as text. The proposal does not include OCR or automatic document discovery.
+
+NEXT STEP
+The sponsor will decide whether to start the pilot after the security review scheduled for 9 September 2026.
