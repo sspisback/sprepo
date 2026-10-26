@@ -1,0 +1,38 @@
+{
+  "name": "brain-assistant-outlook-addin",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev-server": "vite",
+    "build": "tsc -b && vite build",
+    "test:orchestrator": "node --import ./scripts/register-ts-resolve.mjs ./scripts/test-orchestrator.mjs",
+    "test:live-lab": "node --import ./scripts/register-ts-resolve.mjs ./scripts/test-live-lab.mjs",
+    "test:live-task": "node --import ./scripts/register-ts-resolve.mjs ./scripts/test-live-task.mjs",
+    "validate-manifest": "office-addin-manifest validate manifest.xml",
+    "start": "office-addin-debugging start manifest.xml desktop",
+    "stop": "office-addin-debugging stop manifest.xml"
+  },
+  "dependencies": {
+    "@fluentui/react-components": "^9.68.0",
+    "@fluentui/react-icons": "^2.0.292",
+    "@lancedb/lancedb": "^0.40.0",
+    "busboy": "^1.6.0",
+    "mammoth": "^1.13.0",
+    "pdf-parse": "^1.1.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/busboy": "^1.5.5",
+    "@types/office-js": "^1.0.377",
+    "@types/pdf-parse": "^1.1.5",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "office-addin-debugging": "^5.1.5",
+    "office-addin-manifest": "^2.0.5",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.7"
+  }
+}

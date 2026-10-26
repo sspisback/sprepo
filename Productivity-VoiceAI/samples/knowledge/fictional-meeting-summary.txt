@@ -1,0 +1,15 @@
+FICTIONAL MEETING SUMMARY: ATLAS PILOT REVIEW
+Meeting date: 9 September 2026
+Attendees: Mara Chen (Sponsor), Ellis Grant (Service Desk), Noor Patel (Security)
+
+DECISION
+The group approved a six-week Atlas pilot for 30 support analysts, subject to a short access review before the pilot begins.
+
+KEY POINTS
+Ellis confirmed that the service desk will select and review the 120 source procedures. Noor asked that the team document the local storage location and confirm that uploaded documents are not transmitted outside the workstation. Mara agreed these checks must be complete before indexing begins.
+
+ACTIONS
+Ellis will provide the approved source-document list by 14 September 2026. Noor will complete the access review by 16 September 2026. Mara will confirm the pilot start date after both actions are complete.
+
+OPEN ISSUE
+The meeting did not decide whether files larger than 10 MB may be included. That limit remains at the prototype default pending a separate review.
