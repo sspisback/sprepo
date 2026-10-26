@@ -69,6 +69,7 @@
                   <Icon><bt:Image size="16" resid="Icon.16" /><bt:Image size="32" resid="Icon.32" /><bt:Image size="80" resid="Icon.80" /></Icon>
                   <Action xsi:type="ShowTaskpane">
                     <SourceLocation resid="Taskpane.Url" />
+                    <SupportsPinning>true</SupportsPinning>
                     <SupportsNoItemContext>true</SupportsNoItemContext>
                   </Action>
                 </Control>

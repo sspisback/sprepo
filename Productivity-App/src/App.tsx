@@ -50,6 +50,22 @@ const conversationStorageKey = "brain-assistant.conversation.v1";
 const welcome = "Hi! I'm Brain. How can I help you today?";
 const unavailableMessage = "Local AI is currently unavailable. Please check that Ollama is running.";
 
+function formatEmailContext(email: EmailData): string {
+  return [
+    "CURRENTLY SELECTED EMAIL (the authoritative email for this request)",
+    `From: ${email.senderName} <${email.senderEmail}>`,
+    `Received: ${email.receivedAt}`,
+    `Subject: ${email.subject}`,
+    "Body:",
+    email.body,
+  ].join("\n");
+}
+
+function isLabRequest(text: string): boolean {
+  return /\blab\b/i.test(text)
+    || /\b(?:create|make|build|prepare|draft|generate|send|submit|ask)\b[\s\S]{0,60}\b(?:slides?|slide\s+deck|presentation)\b/i.test(text);
+}
+
 function restoreConversation(): Message[] {
   try {
     const stored = window.localStorage.getItem(conversationStorageKey);
@@ -67,7 +83,8 @@ function restoreConversation(): Message[] {
 }
 
 function questionNeedsEmail(text: string): boolean {
-  return /\b(reply|respond|say back|write back|answer them)\b|\b(sender|subject|deadline|action item|their request)\b|\b(this|that|current|open|previous|attached|above)\s+(email|message)\b|\b(what did|what does|what are).{0,30}\b(email|message|they|sender)\b/i.test(text);
+  return /^\s*(?:please\s+)?summari[sz]e(?:\s+this)?\s*[.!?]*$/i.test(text)
+    || /\b(reply|respond|say back|write back|answer them)\b|\b(sender|subject|deadline|action item|their request)\b|\b(this|that|current|open|previous|attached|above)\s+(email|message)\b|\b(what did|what does|what are).{0,30}\b(email|message|they|sender)\b/i.test(text);
 }
 
 function isEmailDependent(text: string, emailContextUsed: boolean): boolean {
@@ -93,6 +110,7 @@ export default function App() {
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const [historyStorageAvailable, setHistoryStorageAvailable] = useState(true);
+  const [emailSelectionLabel, setEmailSelectionLabel] = useState("");
   const [mode, setMode] = useState<AddinMode>("detecting");
   const [mockEmailId, setMockEmailId] = useState(getSelectedMockEmailId);
   const [priorityWorkflow, setPriorityWorkflow] = useState<PriorityWorkflowState | null>(null);
@@ -120,6 +138,7 @@ export default function App() {
   const priorityDigestCache = useRef(new Map<string, PriorityDigestResult>());
   const priorityDigestRequests = useRef(new Set<string>());
   const priorityInspectionSequence = useRef(0);
+  const emailSelectionSequence = useRef(0);
 
   useEffect(() => {
     try {
@@ -139,6 +158,37 @@ export default function App() {
       setHistoryStorageAvailable(false);
     }
   }, [messages]);
+
+  const refreshSelectedEmail = useCallback(async () => {
+    const sequence = ++emailSelectionSequence.current;
+    emailContext.current = null;
+    setEmailSelectionLabel("Loading selected email…");
+
+    const taskProposal = pendingProposal.current;
+    if (taskProposal && (taskProposal.status === "proposal" || taskProposal.status === "clarification")) {
+      setMessages((current) => current.map((message) => message.taskProposal?.proposalId === taskProposal.proposalId
+        ? { ...message, taskProposal: { ...taskProposal, status: "superseded" } }
+        : message));
+    }
+    const labProposal = pendingLabProposal.current;
+    if (labProposal && (labProposal.status === "proposal" || labProposal.status === "clarification")) {
+      setMessages((current) => current.map((message) => message.labProposal?.proposalId === labProposal.proposalId
+        ? { ...message, labProposal: { ...labProposal, status: "superseded" } }
+        : message));
+    }
+    pendingProposal.current = null;
+    pendingLabProposal.current = null;
+
+    try {
+      const identity = getCurrentEmailIdentity(mode);
+      const email = await createEmailService(mode).getCurrentEmail();
+      if (sequence !== emailSelectionSequence.current || getCurrentEmailIdentity(mode) !== identity) return;
+      emailContext.current = { identity, email };
+      setEmailSelectionLabel(`Current email: ${email.subject || "(no subject)"}`);
+    } catch {
+      if (sequence === emailSelectionSequence.current) setEmailSelectionLabel("No readable email selected");
+    }
+  }, [mode]);
 
   useEffect(() => {
     bottom.current?.scrollIntoView({ behavior: "smooth" });
@@ -224,23 +274,28 @@ export default function App() {
 
   useEffect(() => {
     if (mode === "mock") {
+      void refreshSelectedEmail();
       void inspectPriorityDigest();
       return;
     }
     if (mode !== "outlook") return;
 
+    void refreshSelectedEmail();
     void inspectPriorityDigest();
     if (typeof Office === "undefined" || !Office.context?.mailbox || !Office.context.requirements.isSetSupported("Mailbox", "1.5")) return;
 
     const mailbox = Office.context.mailbox;
-    const onItemChanged = () => { void inspectPriorityDigest(); };
+    const onItemChanged = () => {
+      void refreshSelectedEmail();
+      void inspectPriorityDigest();
+    };
     try {
       mailbox.addHandlerAsync(Office.EventType.ItemChanged, onItemChanged);
       return () => mailbox.removeHandlerAsync(Office.EventType.ItemChanged);
     } catch {
       // Older classic Outlook builds still get the automatic inspection when the pane opens.
     }
-  }, [mode, mockEmailId, inspectPriorityDigest]);
+  }, [mode, mockEmailId, inspectPriorityDigest, refreshSelectedEmail]);
 
   useEffect(() => {
     void checkAi(true);
@@ -328,7 +383,6 @@ export default function App() {
     const turn = ++turnId.current;
     const userMessage: Message = { id: nextId.current++, role: "user", text };
     const priorMessages = messages;
-    let emailChanged = false;
     setMessages((current) => [...current, userMessage]);
     setTyping(true);
     try {
@@ -338,52 +392,51 @@ export default function App() {
           const currentIdentity = getCurrentEmailIdentity(mode);
           if (currentIdentity !== activeContext.identity) {
             emailContext.current = null;
-            pendingProposal.current = null;
-            pendingLabProposal.current = null;
+            void refreshSelectedEmail();
             activeContext = null;
-            emailChanged = true;
-            setMessages([{ id: nextId.current++, role: "assistant", text: "The open email changed, so I cleared the previous email conversation context. Ask about the newly open email or start a new chat.", source: "error" }, userMessage]);
           }
         } catch {
           emailContext.current = null;
-          pendingProposal.current = null;
-          pendingLabProposal.current = null;
           activeContext = null;
-          emailChanged = true;
-          setMessages([{ id: nextId.current++, role: "assistant", text: "I couldn't verify which email is open, so I cleared the saved email context for safety. Open a message and summarise it again before asking about its contents.", source: "error" }, userMessage]);
         }
       }
 
       // Supply the currently selected email only when the prompt explicitly
       // refers to it. Fail closed: LabAgent will ask for the missing content.
-      if (!activeContext && mode !== "detecting" && mode !== "unavailable"
-        && /\b(?:this|that|current|open|attached)\s+(?:email|message)\b/i.test(text)) {
+      const wantsEmailContext = questionNeedsEmail(text) || isLabRequest(text);
+      if (!activeContext && wantsEmailContext && mode !== "detecting" && mode !== "unavailable") {
         try {
           const identity = getCurrentEmailIdentity(mode);
           const email = await createEmailService(mode).getCurrentEmail();
           if (getCurrentEmailIdentity(mode) === identity) {
             activeContext = { identity, email };
             emailContext.current = activeContext;
+            setEmailSelectionLabel(`Current email: ${email.subject || "(no subject)"}`);
           }
         } catch {
           // No sample fallback in Outlook. The specialist receives no email body.
         }
       }
 
-      const useEmailContext = Boolean(activeContext && questionNeedsEmail(text));
+      const useEmailContext = Boolean(activeContext && wantsEmailContext);
       try {
-        const history = getHistory(emailChanged ? [] : priorMessages);
+        const history = getHistory(priorMessages);
         const latestMeetingResult = [...priorMessages].reverse().find((message) => message.meetingResult)?.meetingResult;
         const result = await brainOrchestrator.process({
           prompt: text,
           conversationContext: history,
-          currentEmailContext: useEmailContext ? activeContext?.email.body : undefined,
+          currentEmailContext: useEmailContext && activeContext ? formatEmailContext(activeContext.email) : undefined,
           pendingTaskProposal: pendingProposal.current,
           pendingLabProposal: pendingLabProposal.current,
           latestMeetingResult,
           allowMockFallback: !isEmailDependent(text, useEmailContext),
         });
         if (turn === turnId.current) {
+          if (useEmailContext && activeContext && getCurrentEmailIdentity(mode) !== activeContext.identity) {
+            emailContext.current = null;
+            addAssistant("The selected email changed while I was working, so I discarded that email-specific result. Your chat history is still here; ask again to use the newly selected email.", "error");
+            return;
+          }
           const taskProposal = result.agentResults.find((agentResult) => agentResult.taskProposal)?.taskProposal;
           const labProposal = result.agentResults.find((agentResult) => agentResult.labProposal)?.labProposal;
           const meetingResult = result.agentResults.find((agentResult) => agentResult.meeting)?.meeting;
@@ -457,11 +510,17 @@ export default function App() {
       const email = await createEmailService(mode).getCurrentEmail();
       const emailChanged = Boolean(emailContext.current && emailContext.current.identity !== identity);
       if (emailChanged) {
+        const taskProposal = pendingProposal.current;
+        const labProposal = pendingLabProposal.current;
         pendingProposal.current = null;
         pendingLabProposal.current = null;
-        setMessages([{ id: nextId.current++, role: "assistant", text: "The open email changed, so I cleared the previous email conversation context before summarising this message.", source: "error" }, userMessage]);
+        if (taskProposal) setMessages((current) => current.map((message) => message.taskProposal?.proposalId === taskProposal.proposalId
+          ? { ...message, taskProposal: { ...taskProposal, status: "superseded" } } : message));
+        if (labProposal) setMessages((current) => current.map((message) => message.labProposal?.proposalId === labProposal.proposalId
+          ? { ...message, labProposal: { ...labProposal, status: "superseded" } } : message));
       }
       emailContext.current = { identity, email };
+      setEmailSelectionLabel(`Current email: ${email.subject || "(no subject)"}`);
       const summaryReply = await summariseEmailBody(summarySkill, email.body);
       if (getCurrentEmailIdentity(mode) !== identity) {
         emailContext.current = null;
@@ -500,7 +559,6 @@ export default function App() {
 
   function newChat() {
     turnId.current += 1;
-    emailContext.current = null;
     pendingProposal.current = null;
     pendingLabProposal.current = null;
     setMessages([]);
@@ -707,6 +765,8 @@ export default function App() {
       </div>
       <Button appearance="subtle" icon={<ChatAdd20Regular />} onClick={newChat} aria-label="New chat" title="New chat" className="new-chat">New chat</Button>
     </header>
+    <div id="brain-pane-content" className="pane-content">
+    {emailSelectionLabel && <div className="selected-email-indicator" title={emailSelectionLabel}>{emailSelectionLabel}</div>}
     <section className="conversation" aria-label="Chat conversation" aria-live="polite">
       {messages.length === 0 && !priorityWorkflow ? <div className="welcome">
         <div className="welcome-orb"><Sparkle20Filled /></div>
@@ -806,6 +866,7 @@ export default function App() {
         {mode === "mock" ? "Choose a sample email above; matching Priority Digests are analysed by local Ollama." : mode === "outlook" ? "Only the open email is read; email content is sent to local Ollama when needed." : "Email content is sent only to local Ollama when you summarise or ask a related follow-up."} {historyStorageAvailable ? "Chat history is saved in this device's local app storage. New chat clears it." : "Local storage is unavailable; this chat may not survive a pane restart."}
       </p>
     </footer>
+    </div>
   </main>;
 }
 
