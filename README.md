@@ -1,9 +1,9 @@
 # sprepo
-# 🧠 Brain — Productivity Voice AI
+# 🧠 SmartCompanion — Productivity Voice AI
 
 ### 🎙️ An AI assistant that can listen, reason, retrieve knowledge, coordinate agents and speak back.
 
-**Brain** is an experimental, voice-enabled AI productivity assistant built inside Microsoft Outlook.
+**SmartCompanion** is an experimental, voice-enabled AI productivity assistant built inside Microsoft Outlook.
 
 What started as a simple chatbot has evolved into a **multi-agent AI application** combining local Large Language Models (LLMs), intelligent orchestration, Retrieval-Augmented Generation (RAG), editable AI skills, human-in-the-loop workflows and two-way voice interaction.
 
@@ -11,22 +11,22 @@ The objective is simple: **move AI beyond answering questions towards understand
 
 Built hands-on using **OpenAI Codex, React, TypeScript, Node.js, Office.js and locally running AI models**.
 
-## ✨ What Can Brain Do?
+## ✨ What Can SmartCompanion Do?
 
 ### 🤖 1. Understand Requests and Delegate to Specialist AI Agents
 
-Brain uses an LLM-powered Orchestrator to understand natural-language requests and decide which specialist agent should handle them.
+SmartCompanion uses an LLM-powered Orchestrator to understand natural-language requests and decide which specialist agent should handle them.
 
 - **Task Agent:** Converts conversational instructions into structured tasks, identifies deadlines and dependencies, and requests approval before simulated task creation.
 - **Meeting Agent:** Handles calendar questions, identifies important meetings and supports meeting-preparation workflows.
 - **Research Agent:** Answers general questions and retrieves information from uploaded documents.
-- **Lab Agent:** Converts user requests and email context into structured, editable prompts for business analysis or slide-deck creation.
+- **External Productivity Agent:** Converts user requests and email context into structured, editable prompts for business analysis or slide-deck creation.
 
 The Orchestrator can coordinate multiple agents when a request involves more than one capability.
 
 **Example:** "Show me tomorrow's meetings and create a task to prepare for the first one."
 
-Brain identifies the relevant agents, retrieves the simulated meeting information and proposes a task for approval.
+SmartCompanion identifies the relevant agents, retrieves the simulated meeting information and proposes a task for approval.
 
 ### 🧩 2. Skill-Driven AI — Instructions Separate from Code
 
@@ -38,7 +38,7 @@ This allows experimentation with agent behaviour without rewriting the applicati
 
 ### 📚 3. Private Knowledge Retrieval Using RAG
 
-Brain can answer questions using documents uploaded into its local knowledge base.
+SmartCompanion can answer questions using documents uploaded into its local knowledge base.
 
 The workflow:
 
@@ -54,7 +54,7 @@ This demonstrates how an AI assistant can use private information **without retr
 
 ### 📧 4. AI Inside Microsoft Outlook
 
-Brain operates as an Outlook Add-in, allowing users to interact with AI without leaving their email workflow.
+SmartCompanion operates as an Outlook Add-in, allowing users to interact with AI without leaving their email workflow.
 
 Capabilities include:
 
@@ -62,11 +62,11 @@ Capabilities include:
 - Recognising special Priority Digest emails.
 - Extracting meetings and priorities using dedicated skills.
 - Proposing meeting-preparation actions.
-- Interpreting client requests and preparing Lab analysis or slide-creation briefs.
+- Interpreting client requests and preparing external productivity analysis or slide-creation briefs.
 
 The application also supports browser-based testing independently of Outlook.
 
-### 🎙️ 5. Two-Way Voice AI — Speak to Brain and Hear It Respond
+### 🎙️ 5. Two-Way Voice AI — Speak to SmartCompanion and Hear It Respond
 
 The latest enhancement introduces **fully local speech-to-text and text-to-speech**.
 
@@ -76,7 +76,7 @@ Click the microphone, speak naturally and have your speech converted into a text
 
 **Voice output — Piper TTS**
 
-Brain converts its responses into spoken audio, allowing users to listen rather than read.
+SmartCompanion converts its responses into spoken audio, allowing users to listen rather than read.
 
 **End-to-end flow:**
 
@@ -86,9 +86,9 @@ Brain converts its responses into spoken audio, allowing users to listen rather 
 
 **User speaks:** "Create a task to follow up with James about the revenue report tomorrow."
 
-**Brain:** Interprets the request, invokes Task Agent, generates a task proposal and asks for approval.
+**SmartCompanion:** Interprets the request, invokes Task Agent, generates a task proposal and asks for approval.
 
-**Brain speaks:** "I've prepared a follow-up task for tomorrow. Please review and approve it."
+**SmartCompanion speaks:** "I've prepared a follow-up task for tomorrow. Please review and approve it."
 
 Voice is not a separate chatbot. It is another interface to the same AI intelligence and agent workflows.
 
@@ -96,7 +96,7 @@ The voice pipeline has been tested successfully in both a browser and the Classi
 
 ### 🧠 6. Local LLM Inference
 
-Brain uses **Ollama to run Meta's Llama model locally**.
+SmartCompanion uses **Ollama to run Meta's Llama model locally**.
 
 The application explores:
 - LLM-based intent recognition and agent routing.
@@ -108,15 +108,15 @@ The application explores:
 
 ### ⚡ 7. Human-in-the-Loop AI
 
-Brain is designed to propose actions rather than blindly execute them.
+SmartCompanion is designed to propose actions rather than blindly execute them.
 
 Users can review and approve:
 - Task creation.
 - Meeting-preparation requests.
-- Lab analysis requests.
+- external productivity analysis requests.
 - Slide-deck creation prompts.
 
-External systems such as Planner, Calendar and Lab are represented by mock services in this prototype.
+External systems such as Planner, Calendar and external productivity services are represented by mock services in this prototype.
 
 This allows agent reasoning, delegation and approval workflows to be tested without performing real enterprise actions.
 
@@ -126,19 +126,19 @@ This allows agent reasoning, delegation and approval workflows to be tested with
 
 ↓
 
-**Brain Orchestrator — Llama + Markdown Skills**
+**SmartCompanion Orchestrator — Llama + Markdown Skills**
 
 ↓
 
-**Task Agent | Meeting Agent | Research Agent | Lab Agent**
+**Task Agent | Meeting Agent | Research Agent | External Productivity Agent**
 
 ↓
 
-**Tools and Services — RAG / LanceDB / Mock Planner / Mock Calendar / Mock Lab**
+**Tools and Services — RAG / LanceDB / Mock Planner / Mock Calendar / Mock External Productivity Service**
 
 ↓
 
-**Brain Response — Text and Optional Speech**
+**SmartCompanion Response — Text and Optional Speech**
 
 The application separates user interaction, orchestration, agent responsibilities, knowledge retrieval, reasoning and tool execution.
 
@@ -176,7 +176,7 @@ This project is a practical exploration of several core AI engineering concepts:
 
 - LLM inference, document retrieval and speech processing run locally.
 - Outlook email interaction and two-way voice have been tested.
-- Planner, Calendar, meeting preparation and Lab execution use simulated services.
+- Planner, Calendar, meeting preparation and external productivity service execution use simulated services.
 - Real enterprise authentication, permissions, security hardening and production deployment are outside the current prototype.
 
 ## 🚀 The Bigger Idea
@@ -185,17 +185,17 @@ This project is a practical exploration of several core AI engineering concepts:
 
 They will understand what users want, retrieve relevant knowledge, coordinate specialised capabilities, suggest actions and work naturally across text, voice and existing applications.
 
-Brain is my hands-on experiment in bringing those building blocks together.
+SmartCompanion is my hands-on experiment in bringing those building blocks together.
 
 **GitHub project:** [Productivity-VoiceAI](https://github.com/sspisback/sprepo/tree/main/Productivity-VoiceAI)
 
-# 🧠 Brain — Agentic AI Productivity Assistant
+# 🧠 SmartCompanion — Agentic AI Productivity Assistant
 
 ### 🚀 From a simple Outlook Add-in to a multi-agent AI assistant with local LLMs, RAG, skills and autonomous workflows.
 
-**Brain** is a hands-on experiment in building an **agentic AI productivity assistant** that lives inside Microsoft Outlook — combining conversational AI, specialist agents, private knowledge retrieval and human-in-the-loop workflows.
+**SmartCompanion** is a hands-on experiment in building an **agentic AI productivity assistant** that lives inside Microsoft Outlook — combining conversational AI, specialist agents, private knowledge retrieval and human-in-the-loop workflows.
 
-Built using **React, TypeScript, Node.js, Office.js and Ollama**, Brain explores how AI can move beyond answering questions to understanding intent, retrieving context, coordinating agents and proposing actions.
+Built using **React, TypeScript, Node.js, Office.js and Ollama**, SmartCompanion explores how AI can move beyond answering questions to understanding intent, retrieving context, coordinating agents and proposing actions.
 
 The interesting part? **The AI runs locally.** No cloud LLM API is required for the prototype.
 
@@ -208,7 +208,7 @@ A custom-built Orchestrator uses an LLM to interpret natural-language requests a
 - **Task Agent** — Extracts actionable tasks, identifies dependencies and deadlines, and proposes tasks for approval.
 - **Meeting Agent** — Handles meeting queries, calendar context and preparation workflows.
 - **Research Agent** — Answers general questions and retrieves relevant knowledge from uploaded documents.
-- **Lab Agent** — Transforms emails and instructions into structured requests for analysis or slide creation.
+- **External Productivity Agent** — Transforms emails and instructions into structured requests for analysis or slide creation.
 
 Supports multi-agent routing, contextual follow-ups and shared conversation state.
 
@@ -222,7 +222,7 @@ Change a skill → change the agent's behaviour — without rewriting the underl
 
 ### 📚 Private Knowledge with RAG
 
-Brain uses **Retrieval-Augmented Generation (RAG)** to answer questions using locally stored documents.
+SmartCompanion uses **Retrieval-Augmented Generation (RAG)** to answer questions using locally stored documents.
 
 - Upload PDF, Word and text files.
 - Extract and chunk document content.
@@ -257,7 +257,7 @@ Capabilities include:
 
 ### ⚡ Human-in-the-Loop Agent Workflows
 
-Brain doesn't blindly execute actions.
+SmartCompanion doesn't blindly execute actions.
 
 It proposes, explains and waits for approval.
 
@@ -267,7 +267,7 @@ It proposes, explains and waits for approval.
 - Generate editable prompts for AI analysis or slide creation.
 - Approve requests before mock service execution.
 
-Calendar, Planner, meeting preparation and Lab integrations are currently simulated through modular mock services.
+Calendar, Planner, meeting preparation and external productivity service integrations are currently simulated through modular mock services.
 
 ## 🏗️ Architecture
 
@@ -294,7 +294,7 @@ Supporting components:
 
 **Knowledge:** LanceDB · Embeddings · Vector Search · RAG
 
-**Integration:** Microsoft Office.js · Mock Microsoft Planner / Calendar · Mock Lab Services
+**Integration:** Microsoft Office.js · Mock Microsoft Planner / Calendar · Mock External Productivity Services
 
 ## 🧪 What I'm Experimenting With
 
@@ -322,9 +322,9 @@ Real enterprise integrations are intentionally mocked where appropriate.
 
 **AI becomes significantly more useful when it can understand intent, retrieve relevant knowledge, coordinate specialist capabilities and help users take action — not just generate text.**
 
-Brain is my experiment in making that happen, one agent, skill and tool at a time.
+SmartCompanion is my experiment in making that happen, one agent, skill and tool at a time.
 
-## Brain Outlook Add-in — AI Productivity Assistant
+## SmartCompanion Outlook Add-in — AI Productivity Assistant
 
 An experimental Microsoft Outlook Add-in built with React, TypeScript and Office.js.
 
