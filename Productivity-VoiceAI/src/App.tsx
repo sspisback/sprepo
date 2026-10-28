@@ -602,11 +602,9 @@ export default function App() {
           allowMockFallback: !isEmailDependent(text, useEmailContext),
         });
         if (turn === turnId.current) {
-          if (useEmailContext && activeContext && getCurrentEmailIdentity(mode) !== activeContext.identity) {
-            emailContext.current = null;
-            addAssistant("The selected email changed while I was working, so I discarded that email-specific result. Your chat history is still here; ask again to use the newly selected email.", "error");
-            return;
-          }
+          // Keep the email snapshot captured for this request. Outlook can change
+          // the selected item while the model is working; that should affect new
+          // requests, not invalidate this request's eventual result.
           const taskProposal = result.agentResults.find((agentResult) => agentResult.taskProposal)?.taskProposal;
           const labProposal = result.agentResults.find((agentResult) => agentResult.labProposal)?.labProposal;
           const meetingResult = result.agentResults.find((agentResult) => agentResult.meeting)?.meeting;
@@ -682,6 +680,9 @@ export default function App() {
 
       const identity = getCurrentEmailIdentity(mode);
       const email = await createEmailService(mode).getCurrentEmail();
+      if (getCurrentEmailIdentity(mode) !== identity) {
+        throw new Error("The selected email changed before Brain could capture it. Please run the request again for the email you want.");
+      }
       const emailChanged = Boolean(emailContext.current && emailContext.current.identity !== identity);
       if (emailChanged) {
         const taskProposal = pendingProposal.current;
@@ -696,10 +697,8 @@ export default function App() {
       emailContext.current = { identity, email };
       setEmailSelectionLabel(`Current email: ${email.subject || "(no subject)"}`);
       const summaryReply = await summariseEmailBody(summarySkill, email.body);
-      if (getCurrentEmailIdentity(mode) !== identity) {
-        emailContext.current = null;
-        throw new Error("The open email changed while Brain was summarising it. The result was discarded; summarise the newly open email again.");
-      }
+      // The summary belongs to the email captured above. A later selection
+      // change must not discard work the user already requested.
       if (turn === turnId.current) {
         setAiStatus("connected");
         setMessages((current) => [...current, {
@@ -710,10 +709,6 @@ export default function App() {
     } catch (caught) {
       const detail = caught instanceof Error ? caught.message : "An unexpected error occurred.";
       if (turn === turnId.current) {
-        if (/open email changed while/i.test(detail)) {
-          addAssistant(detail, "error");
-          return;
-        }
         const aiUnavailable = /ollama|local model|local ai|timed out|HTTP \d+/i.test(detail);
         if (aiUnavailable) {
           setAiStatus("unavailable");
