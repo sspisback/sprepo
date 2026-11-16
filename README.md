@@ -1,4 +1,91 @@
 # sprepo
+## 🛒 PriceScout — AI-Powered Retail Price Intelligence
+
+### From vibe coding to a real purchase. Literally. 📱
+
+**What happens when a Product Leader stops writing requirements for AI products and starts building them?**
+
+PriceScout is one of my hands-on experiments in **AI-assisted software development, local LLMs, intelligent automation and Model Context Protocol (MCP)**.
+
+Built using **OpenAI Codex and VS Code**, PriceScout started with a simple problem: *Can I build my own intelligent price-monitoring assistant that searches UK retailers, tracks price movements and helps me make better buying decisions?*
+
+Turns out, yes. And there's a rather satisfying twist.
+
+> **While experimenting with PriceScout, I spotted an Amazon price drop for the iPhone 17e — and promptly ordered one.**
+>
+> Sometimes the best product validation is becoming your own customer. 😄
+
+### ⚡ What I Built
+
+**1. Automated Retail Price Intelligence**
+
+- Monitors configured iPhone models across supported UK retailers using retailer-specific scanning adapters.
+- Runs scheduled scans at 6 PM UK time, with on-demand scanning.
+- Tracks verified prices, retailer availability, product links and price reductions.
+- Stores historical observations in **SQLite**, enabling price comparisons and trend analysis.
+- Provides a React dashboard for product configuration, search results and price history.
+
+**2. AI-Powered Natural-Language Search**
+
+Integrated **Ollama + Llama**, running locally on my laptop, to interpret conversational shopping requests.
+
+For example:
+
+*"Find the cheapest unlocked iPhone 17e, 256GB, and compare prices against last week."*
+
+The LLM interprets the request into structured search criteria. TypeScript services validate the output, execute the relevant retailer scans or database queries, and return actual observations.
+
+**The LLM interprets intent; deterministic code retrieves prices and performs calculations.** No AI-invented prices or SQL.
+
+**3. MCP Server — Making PriceScout Accessible to Other AI Agents**
+
+Extended PriceScout with a standalone **Model Context Protocol (MCP) server**, built using the official TypeScript MCP SDK.
+
+It exposes four discoverable tools:
+
+- `get_price_history` — Retrieve historical price observations.
+- `get_price_drops` — Identify recorded price reductions.
+- `compare_retailers` — Compare the latest saved prices across retailers.
+- `search_prices` — Trigger a fresh retailer scan.
+
+This allows compatible AI clients such as Codex to discover and invoke PriceScout capabilities without using its web interface.
+
+The MCP server reuses existing backend services and SQLite data. **It doesn't need its own LLM — the calling AI provides the reasoning.**
+
+### 🏗️ How It's Architected
+
+**React + Vite** — Web interface and dashboards.
+
+**Node.js + TypeScript** — Backend services, retailer adapters, scheduling and price comparisons.
+
+**SQLite** — Persistent price history, scan results and search records.
+
+**Ollama + Llama** — Local natural-language understanding.
+
+**MCP SDK + Zod** — Discoverable tools, structured schemas and validated AI-client interactions.
+
+**Windows CMD launcher** — Simple local startup without additional desktop software.
+
+### 🎯 Why I Built It
+
+As a Product Leader, I'm increasingly interested in going beyond discussing AI capabilities and **understanding how these systems actually work by building them**.
+
+PriceScout gave me hands-on exposure to:
+
+- **Vibe coding:** Translating product ideas into working software through iterative prompting, testing and debugging with Codex.
+- **Agent-tool integration:** Separating AI reasoning from deterministic services and external data retrieval.
+- **MCP interoperability:** Making existing software capabilities discoverable and reusable by other AI applications.
+- **Local AI:** Running Llama through Ollama without depending on a cloud LLM API.
+- **Product engineering:** Designing modular services, persistent data, scheduled jobs, input validation and user-facing failure handling.
+
+The bigger lesson? **You don't need to be a full-time software engineer to experiment meaningfully with AI engineering — but you do need to understand the architecture, validate the outputs and know where AI should (and shouldn't) make decisions.**
+
+### 🚧 Status
+
+Working local-first experimental application. Retailer coverage depends on website accessibility; scheduled scans require the laptop and backend to be running. The MCP server runs locally and is designed for compatible MCP clients.
+
+**🔗 [Explore PriceScout — Source Code, Architecture & MCP Documentation](PriceScout/)**
+
 # 🧠 SmartCompanion — Productivity Voice AI
 
 ### 🎙️ An AI assistant that can listen, reason, retrieve knowledge, coordinate agents and speak back.
