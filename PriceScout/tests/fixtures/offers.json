@@ -1,0 +1,6 @@
+[
+  {"retailer":"Fixture Store","model":"iPhone 17e","storage":256,"condition":"New","unlocked":true,"basePrice":649,"delivery":0,"totalPrice":649,"stock":"In stock","channel":"Online","currency":"GBP"},
+  {"retailer":"Fixture Store","model":"iPhone 17e","storage":128,"condition":"New","unlocked":true,"basePrice":599,"delivery":0,"totalPrice":599,"stock":"In stock","channel":"Online","currency":"GBP"},
+  {"retailer":"Fixture Store","model":"iPhone 17e","storage":256,"condition":"Refurbished","unlocked":true,"basePrice":499,"delivery":0,"totalPrice":499,"stock":"In stock","channel":"Online","currency":"GBP"},
+  {"retailer":"Fixture Store","model":"iPhone 17e","storage":256,"condition":"New","unlocked":false,"basePrice":25,"delivery":0,"totalPrice":25,"stock":"In stock","channel":"Online","currency":"GBP"}
+]
